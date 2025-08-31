@@ -3,254 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>核心資料庫系統轉型計畫</title>
+    <title>納骨塔新資料庫系統建置與營運規劃</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: "Calm Harmony" - A palette using warm beige (#F5F5DC), off-white (#FAF9F6), a deep slate blue for headings (#4A5568), and a muted teal for accents and interactive elements (#4FD1C5). -->
-    <!-- Application Structure Plan: A single-page dashboard layout is chosen over a linear presentation to provide a high-level overview while allowing users to drill down into specific risk areas. The structure consists of a sticky side navigation for quick access to three main sections: 1. Project Overview, 2. Interactive Risk Assessment, 3. Actionable Next Steps. The Risk Assessment section uses an interactive accordion to manage complexity and focus user attention on one project phase at a time. This non-linear, user-driven exploration path is more effective for a manager who needs to quickly grasp key issues and solutions. -->
-    <!-- Visualization & Content Choices: The source report is entirely qualitative. Therefore, standard data charts (like bar or line) are inappropriate. Instead, information is visualized through structure and iconography. Project Goal: Inform -> Method: Thematic text blocks with icons (e.g., magnifying glass for 'Problem', warning sign for 'Risk', lightbulb for 'Suggestion'). Interaction: None, purely informational. Justification: Enhances scannability and comprehension of complex text. Project Phases: Organize -> Method: An interactive HTML/CSS accordion. Interaction: Click to expand/collapse. Justification: Prevents information overload and allows focused review of each phase. Next Steps: Inform -> Method: An HTML checklist format. Interaction: None. Justification: Presents action items clearly. All diagrams and icons are built with HTML/CSS/Unicode. -->
+    <!-- Chosen Palette: Calm Corporate -->
+    <!-- Application Structure Plan: The application is designed around four key thematic sections: 1. Project Overview, 2. Core Challenges & Solutions, 3. Strategic Roadmap, and 4. Key Discussion Points. This thematic structure replaces the linear format of the source report, allowing users to navigate directly to their area of interest. The core of the application is the "Challenges & Solutions" section, which uses an interactive card system. Users can select a major project area (Database, Second Tower, Office) to dynamically display the associated problems and their proposed solutions side-by-side. This design choice facilitates direct comparison and understanding of the project's core components. An interactive timeline visualizes the phased rollout, making the strategic plan more digestible. This user-centric design improves clarity and engagement compared to a static document. -->
+    <!-- Visualization & Content Choices: Report Info: Phased project plan -> Goal: Organize & show change -> Viz/Method: Interactive HTML/CSS Timeline -> Interaction: Clicking a phase reveals detailed tasks -> Justification: Transforms a static list into an engaging, easy-to-understand process flow. Report Info: Challenges and solutions for three distinct projects -> Goal: Compare & Inform -> Viz/Method: Two-column card layout -> Interaction: Buttons filter content by project, showing related challenges and solutions -> Justification: Allows users to focus on one project at a time and directly see the relationship between a problem and its solution. No traditional charts are used as the source material is qualitative and strategic, not quantitative. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background-color: #FAF9F6;
-            color: #4A5568;
-        }
-        .accent-bg { background-color: #4FD1C5; }
-        .accent-text { color: #4FD1C5; }
-        .secondary-bg { background-color: #F5F5DC; }
-        .header-text { color: #2D3748; }
-        .content-text { color: #4A5568; }
-        .card {
-            background-color: #FFFFFF;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            transition: all 0.3s ease-in-out;
+            background-color: #f8f7f4;
+            color: #3d405b;
         }
         .nav-link {
-            transition: all 0.3s ease-in-out;
+            transition: color 0.3s ease, border-bottom-color 0.3s ease;
+            border-bottom: 2px solid transparent;
         }
-        .nav-link.active {
-            background-color: #4FD1C5;
-            color: white;
-            transform: translateX(5px);
+        .nav-link.active, .nav-link:hover {
+            color: #81b29a;
+            border-bottom-color: #81b29a;
         }
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out;
+        .tab-btn {
+            transition: all 0.3s ease;
         }
-        .accordion-arrow {
-            transition: transform 0.3s ease-in-out;
+        .tab-btn.active {
+            background-color: #81b29a;
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 1.25rem;
+            left: -0.6rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            background-color: #f8f7f4;
+            border: 4px solid #81b29a;
+            border-radius: 50%;
+            z-index: 10;
         }
     </style>
 </head>
 <body class="antialiased">
 
-    <div class="flex flex-col md:flex-row min-h-screen">
-        <aside class="w-full md:w-64 bg-white shadow-lg md:sticky md:top-0 md:h-screen">
-            <div class="p-6">
-                <h1 class="text-xl font-bold header-text">專案導覽</h1>
-                <p class="text-sm text-gray-500 mt-1">資料庫系統升級計畫</p>
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-[#3d405b]">納骨塔系統建置規劃</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#overview" class="nav-link font-medium pb-1">專案總覽</a>
+                <a href="#challenges" class="nav-link font-medium pb-1">挑戰與對策</a>
+                <a href="#strategy" class="nav-link font-medium pb-1">整體策略</a>
+                <a href="#discussion" class="nav-link font-medium pb-1">討論重點</a>
             </div>
-            <nav id="navigation" class="mt-4">
-                <a href="#overview" class="nav-link block py-3 px-6 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium">專案總覽</a>
-                <a href="#risks" class="nav-link block py-3 px-6 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium">關鍵風險評估</a>
-                <a href="#actions" class="nav-link block py-3 px-6 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium">下一步行動</a>
-            </nav>
-        </aside>
+            <button id="mobile-menu-button" class="md:hidden text-2xl">☰</button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 space-y-2">
+            <a href="#overview" class="block nav-link font-medium py-1">專案總覽</a>
+            <a href="#challenges" class="block nav-link font-medium py-1">挑戰與對策</a>
+            <a href="#strategy" class="block nav-link font-medium py-1">整體策略</a>
+            <a href="#discussion" class="block nav-link font-medium py-1">討論重點</a>
+        </div>
+    </header>
 
-        <main class="flex-1 p-6 sm:p-8 md:p-12">
-            <header class="mb-12">
-                <h1 class="text-4xl font-bold header-text">迎接未來挑戰：核心資料庫系統轉型計畫</h1>
-                <p class="mt-4 text-lg content-text">本報告旨在說明系統升級之重要性，提出各階段潛在風險與應對策略，並建議下一步行動方案，以確保專案順利推動。</p>
-            </header>
+    <main class="container mx-auto px-6 py-12">
+        <section id="overview" class="mb-20 text-center">
+            <h2 class="text-4xl font-bold text-[#3d405b] mb-4">新資料庫系統建置與未來營運規劃</h2>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600 mb-8">
+                為因應公司超過30年的營運歷史、現有系統停止更新，以及未來4年第二寶塔的興建計畫，我們必須建置一套全新的整合性資料庫系統。本計畫旨在解決當前挑戰，並為未來的多園區營運奠定穩固基礎。
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#81b29a]">
+                    <h3 class="text-xl font-bold mb-2">系統現代化</h3>
+                    <p class="text-gray-600">取代停止更新的舊系統，整合發票、塔位、權狀與合約等核心功能。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#e07a5f]">
+                    <h3 class="text-xl font-bold mb-2">支援未來擴展</h3>
+                    <p class="text-gray-600">建立可支援多園區管理的架構，為第二寶塔的興建與營運預作準備。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#f2cc8f]">
+                    <h3 class="text-xl font-bold mb-2">提升營運效率</h3>
+                    <p class="text-gray-600">統一資料格式，強化資安備份機制，並配合辦公室重建進行IT設施升級。</p>
+                </div>
+            </div>
+        </section>
 
-            <section id="overview" class="mb-16 scroll-mt-24">
-                <h2 class="text-3xl font-bold header-text mb-6 border-l-4 border-teal-400 pl-4">專案背景與升級必要性</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="card p-6">
-                        <div class="flex items-center">
-                            <span class="text-3xl">📉</span>
-                            <h3 class="ml-4 text-xl font-semibold header-text">現況瓶頸</h3>
-                        </div>
-                        <p class="mt-4 content-text">普大科技舊系統已逾30年，缺乏殯葬業專業性且無更新支援，已成為公司營運與發展的瓶頸。</p>
-                    </div>
-                    <div class="card p-6">
-                        <div class="flex items-center">
-                            <span class="text-3xl">🚀</span>
-                            <h3 class="ml-4 text-xl font-semibold header-text">未來展望</h3>
-                        </div>
-                        <p class="mt-4 content-text">第二座寶塔即將興建與營運，業務量將大幅增長，需要更強大且能整合的資料庫作為後盾。</p>
-                    </div>
-                    <div class="card p-6">
-                        <div class="flex items-center">
-                            <span class="text-3xl">🎯</span>
-                            <h3 class="ml-4 text-xl font-semibold header-text">核心目標</h3>
-                        </div>
-                        <p class="mt-4 content-text">實現發票開立、塔位管理、權狀與合約製作等功能的一站式整合管理，提升營運效率與客戶服務品質。</p>
+        <section id="challenges" class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3d405b] mb-4">核心挑戰與解決對策</h2>
+                <p class="max-w-2xl mx-auto text-lg text-gray-600">
+                    本專案涵蓋三大範疇：系統轉移、新塔興建與辦公室重建。每個範疇都有其獨特的挑戰與相對應的解決方案。點擊下方按鈕以深入了解各項目的具體規劃。
+                </p>
+            </div>
+            <div id="tabs" class="flex flex-wrap justify-center gap-4 mb-8">
+                <button class="tab-btn px-6 py-2 font-semibold rounded-full bg-white shadow-sm active" data-tab="database">🗃️ 資料庫系統</button>
+                <button class="tab-btn px-6 py-2 font-semibold rounded-full bg-white shadow-sm" data-tab="tower">🏗️ 第二寶塔</button>
+                <button class="tab-btn px-6 py-2 font-semibold rounded-full bg-white shadow-sm" data-tab="office">🏢 辦公室重建</button>
+            </div>
+
+            <div id="tab-content" class="transition-opacity duration-500 ease-in-out">
+            </div>
+        </section>
+
+        <section id="strategy" class="mb-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3d405b] mb-4">整體策略與執行藍圖</h2>
+                <p class="max-w-2xl mx-auto text-lg text-gray-600">
+                    建議成立跨部門專案小組，並採用分階段驗收方式，以確保專案順利推進。此系統的長遠規劃將以未來10年的營運規模為目標進行設計。
+                </p>
+            </div>
+            <div class="relative pl-8 border-l-4 border-gray-200">
+                <div id="timeline-item-1" class="timeline-item mb-12 cursor-pointer">
+                    <h3 class="text-2xl font-bold text-[#3d405b]">第 1 階段：核心建立</h3>
+                    <p class="text-gray-500 mb-2">主要目標：確保資料無痛轉移與核心功能穩定上線。</p>
+                    <div class="timeline-details hidden bg-gray-50 p-4 rounded-lg">
+                        <p><strong>驗收項目：</strong></p>
+                        <ul class="list-disc list-inside text-gray-600">
+                            <li>資料盤點、清理與成功移轉</li>
+                            <li>核心模組（塔位保留、合約、權狀製作）開發與測試</li>
+                        </ul>
                     </div>
                 </div>
-            </section>
-
-            <section id="risks" class="mb-16 scroll-mt-24">
-                <h2 class="text-3xl font-bold header-text mb-6 border-l-4 border-teal-400 pl-4">關鍵風險評估</h2>
-                <p class="mb-8 content-text">本專案的成功與否，取決於對各階段風險的識別與管理。此處將專案分為四大階段，並以互動式選單呈現各階段的潛在問題、風險與建議策略，讓您能聚焦於特定環節進行深入了解。</p>
-                <div id="accordion-container" class="space-y-4">
-
-                    <div class="accordion-item card overflow-hidden">
-                        <div class="accordion-header p-6 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100">
-                            <h3 class="text-xl font-semibold header-text">第一階段：前期規劃與溝通</h3>
-                            <span class="accordion-arrow text-2xl transform text-gray-500">▶</span>
-                        </div>
-                        <div class="accordion-content">
-                            <div class="p-6 border-t border-gray-200 space-y-6">
-                                <div>
-                                    <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2 text-xl">❓</span>問題一：需求定義不完整</h4>
-                                    <p class="content-text mb-2"><strong class="font-semibold text-red-500">風險：</strong>舊系統存在大量未文件化的人工流程與特例。若未完整梳理，新系統可能遺漏關鍵功能，導致上線後不符合作業需求。</p>
-                                    <p class="content-text bg-teal-50 p-3 rounded-lg"><strong class="font-semibold accent-text">建議：</strong>在與同創科技開會前，務必成立跨部門小組（業務、會計、行政），由專人負責完整梳理並文件化現有所有作業流程，包含特例處理方式，最終產出一份詳盡的業務需求清單。</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2 text-xl">❗</span>問題二：專案範圍失控</h4>
-                                    <p class="content-text mb-2"><strong class="font-semibold text-red-500">風險：</strong>新系統預計整合多項功能，若無明確界定開發範圍與優先順序，易導致專案延遲或成本超支。</p>
-                                    <p class="content-text bg-teal-50 p-3 rounded-lg"><strong class="font-semibold accent-text">建議：</strong>應與同創科技共同制定階段性目標與驗收標準。例如：第一期完成舊資料庫移轉與新系統基礎建置；第二期上線塔位、權狀與合約功能；第三期整合發票與金流。</p>
-                                </div>
-                            </div>
-                        </div>
+                <div id="timeline-item-2" class="timeline-item mb-12 cursor-pointer">
+                    <h3 class="text-2xl font-bold text-[#3d405b]">第 2 階段：功能擴充</h3>
+                    <p class="text-gray-500 mb-2">主要目標：完善財務與報表功能，提升管理效率。</p>
+                     <div class="timeline-details hidden bg-gray-50 p-4 rounded-lg">
+                        <p><strong>驗收項目：</strong></p>
+                        <ul class="list-disc list-inside text-gray-600">
+                            <li>發票系統整合</li>
+                            <li>各類營運報表產出功能</li>
+                        </ul>
                     </div>
-
-                    <div class="accordion-item card overflow-hidden">
-                        <div class="accordion-header p-6 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100">
-                            <h3 class="text-xl font-semibold header-text">第二階段：舊有資料庫移轉</h3>
-                            <span class="accordion-arrow text-2xl transform text-gray-500">▶</span>
-                        </div>
-                        <div class="accordion-content">
-                            <div class="p-6 border-t border-gray-200 space-y-6">
-                                <div>
-                                    <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2 text-xl">📂</span>問題一：資料不一致或遺失</h4>
-                                    <p class="content-text mb-2"><strong class="font-semibold text-red-500">風險：</strong>舊資料庫因歷史悠久，可能存在重複、錯誤或不完整的「髒資料」。若直接移轉將污染新系統，導致後續作業出錯。</p>
-                                    <p class="content-text bg-teal-50 p-3 rounded-lg"><strong class="font-semibold accent-text">建議：</strong>執行「資料清洗 (Data Cleansing)」流程。在移轉前，由內部人員與普大科技共同整理舊資料，並與同創科技確認移轉格式與規則，進行逐筆檢查與驗證。</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2 text-xl">🔌</span>問題二：系統與資料庫不相容</h4>
-                                    <p class="content-text mb-2"><strong class="font-semibold text-red-500">風險：</strong>普大科技與同創科技的資料庫架構可能完全不同，導致資料無法直接搬移，增加技術難度與時間成本。</p>
-                                    <p class="content-text bg-teal-50 p-3 rounded-lg"><strong class="font-semibold accent-text">建議：</strong>要求同創科技提供完整的「移轉計畫書」，其中應包含詳細的技術方案、潛在問題的應對策略，以及完成後的驗收標準（如資料筆數、欄位完整度等）。</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="accordion-item card overflow-hidden">
-                        <div class="accordion-header p-6 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100">
-                            <h3 class="text-xl font-semibold header-text">第三階段：新系統上線與維護</h3>
-                            <span class="accordion-arrow text-2xl transform text-gray-500">▶</span>
-                        </div>
-                        <div class="accordion-content">
-                            <div class="p-6 border-t border-gray-200 space-y-6">
-                                <div>
-                                    <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2 text-xl">👥</span>問題一：員工適應與學習</h4>
-                                    <p class="content-text mb-2"><strong class="font-semibold text-red-500">風險：</strong>資深員工可能習慣舊系統的操作模式，對新系統的改變產生抗拒，影響工作效率與系統推行成效。</p>
-                                    <p class="content-text bg-teal-50 p-3 rounded-lg"><strong class="font-semibold accent-text">建議：</strong>專案初期就讓核心員工參與，讓他們提出需求與建議。上線前進行密集且系統性的教育訓練，並設立專人協助管道，提供即時技術支援。</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2 text-xl">📈</span>問題二：未來擴充性不足</h4>
-                                    <p class="content-text mb-2"><strong class="font-semibold text-red-500">風險：</strong>新系統若只考慮當前需求，可能無法應對未來第二座寶塔營運後帶來的龐大資料量和新功能需求。</p>
-                                    <p class="content-text bg-teal-50 p-3 rounded-lg"><strong class="font-semibold accent-text">建議：</strong>與同創科技討論時，應將「未來擴充性」列為重要考量。確保新系統的架構具備彈性，能輕鬆擴充塔位數量、增加新的服務項目。</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="accordion-item card overflow-hidden">
-                        <div class="accordion-header p-6 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100">
-                            <h3 class="text-xl font-semibold header-text">第四階段：軟硬體與環境協同</h3>
-                            <span class="accordion-arrow text-2xl transform text-gray-500">▶</span>
-                        </div>
-                        <div class="accordion-content">
-                             <div class="p-6 border-t border-gray-200 space-y-6">
-                                <div>
-                                    <h4 class="font-bold text-lg mb-2 flex items-center"><span class="mr-2 text-xl">🏢</span>問題一：辦公室重建與系統時程衝突</h4>
-                                    <p class="content-text mb-2"><strong class="font-semibold text-red-500">風險：</strong>新辦公室的重建進度若與新系統的部署進度不一致，可能導致軟硬體環境無法同步就緒，影響上線時程。</p>
-                                    <p class="content-text bg-teal-50 p-3 rounded-lg"><strong class="font-semibold accent-text">建議：</strong>指派一位內部專案經理，負責統籌辦公室重建與新系統開發的時程。並在重建規劃初期，就明確定義新系統的硬體需求（如伺服器規格、網路佈線），確保新系統有足夠的硬體環境支援。</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
-            </section>
-
-            <section id="actions" class="scroll-mt-24">
-                <h2 class="text-3xl font-bold header-text mb-6 border-l-4 border-teal-400 pl-4">結論與下一步行動</h2>
-                <div class="card p-8">
-                    <p class="mb-6 content-text text-lg">本次系統升級不僅是一項技術專案，更是一次關鍵的**企業轉型**。只要在前期溝通時，將所有流程、需求與潛在風險完整地釐清並文件化，就能大幅降低後續風險，確保新系統能順利上線，並成為公司未來營運的核心動能。</p>
-                    <h3 class="font-bold text-xl mb-4 header-text">建議行動方案：</h3>
-                    <ul class="list-disc list-inside space-y-3 content-text">
-                        <li><strong class="font-semibold">會前準備：</strong>立即啟動內部流程盤點，並準備詳細需求清單，作為與廠商溝通的基礎。</li>
-                        <li><strong class="font-semibold">指派負責人：</strong>指定一位內部專案經理，作為專案主導與內外部的溝通窗口。</li>
-                        <li><strong class="font-semibold">會談焦點：</strong>在9月初的會議中，除了討論功能，更要著重於「風險應對」、「資料移轉」與「長期維護」的細節。</li>
-                    </ul>
+                <div id="timeline-item-3" class="timeline-item cursor-pointer">
+                    <h3 class="text-2xl font-bold text-[#3d405b]">第 3 階段：未來擴展</h3>
+                    <p class="text-gray-500 mb-2">主要目標：實現跨園區管理，為第二寶塔營運做準備。</p>
+                     <div class="timeline-details hidden bg-gray-50 p-4 rounded-lg">
+                        <p><strong>驗收項目：</strong></p>
+                        <ul class="list-disc list-inside text-gray-600">
+                            <li>多園區管理架構</li>
+                            <li>統一編碼與跨園區報表功能</li>
+                        </ul>
+                    </div>
                 </div>
-            </section>
-        </main>
-    </div>
+            </div>
+        </section>
+
+        <section id="discussion">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-[#3d405b] mb-4">關鍵討論重點</h2>
+                <p class="max-w-2xl mx-auto text-lg text-gray-600">
+                    為確保專案成功，以下幾點需要與會人員共同討論並達成共識，以作為後續執行的重要依據。
+                </p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
+                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">資料移轉</h3>
+                    <p class="text-gray-600">討論資料清理、格式標準化的可行性與預計時程。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
+                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">開發優先序</h3>
+                    <p class="text-gray-600">確認系統模組（核心、發票、報表）的開發優先順序。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
+                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">管理架構</h3>
+                    <p class="text-gray-600">設計能同時管理新舊雙塔的系統架構與編碼規則。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
+                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">資安備份</h3>
+                    <p class="text-gray-600">審核每日異地備份與雲端備援的具體方案與成本。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
+                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">重建影響</h3>
+                    <p class="text-gray-600">評估辦公室重建期間，對系統建置與日常營運的衝擊。</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
+                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">長期規劃</h3>
+                    <p class="text-gray-600">確保系統設計具備彈性，能滿足未來永續的發展需求。</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-white mt-20 border-t">
+        <div class="container mx-auto px-6 py-4 text-center text-gray-500">
+            <p>&copy; 2025 高雄觀音山金寶塔建置專案分析 by 瑋志</p>
+        </div>
+    </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const accordionHeaders = document.querySelectorAll('.accordion-header');
-            accordionHeaders.forEach(header => {
-                header.addEventListener('click', () => {
-                    const content = header.nextElementSibling;
-                    const arrow = header.querySelector('.accordion-arrow');
-                    
-                    if (content.style.maxHeight) {
-                        content.style.maxHeight = null;
-                        arrow.style.transform = 'rotate(0deg)';
-                    } else {
-                        document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
-                        document.querySelectorAll('.accordion-arrow').forEach(a => a.style.transform = 'rotate(0deg)');
-                        content.style.maxHeight = content.scrollHeight + "px";
-                        arrow.style.transform = 'rotate(90deg)';
-                    }
+        const contentData = {
+            database: {
+                title: '資料庫系統轉移',
+                challenges: [
+                    { icon: '🔄', title: '資料移轉難度', text: '資料格式不一，存在遺漏與錯誤需耗時清理。' },
+                    { icon: '⏳', title: '新舊系統交接', text: '雙系統並行易造成資料混亂與操作失誤。' },
+                    { icon: '🎯', title: '功能需求龐大', text: '一次性開發所有功能可能導致專案延誤。' },
+                    { icon: '🔒', title: '資安與備份', text: '面臨資料外洩或因意外而遺失的風險。' }
+                ],
+                solutions: [
+                    { icon: '🧹', title: '資料盤點與清理', text: '移轉前進行資料標準化，確保資料品質。' },
+                    { icon: '⏸️', title: '平行測試期', text: '保留雙系統並行3–6個月，確保新系統穩定。' },
+                    { icon: '🧩', title: '模組化開發', text: '優先開發核心功能，再逐步擴充附加功能。' },
+                    { icon: '💾', title: '強化備份機制', text: '執行每日異地備份，並建立雲端備援。' }
+                ]
+            },
+            tower: {
+                title: '第二寶塔興建與營運',
+                challenges: [
+                    { icon: '🏛️', title: '多園區管理', text: '現有系統無法同時管理兩座不同地點的寶塔。' },
+                    { icon: '🔢', title: '編碼不一致', text: '舊塔與新塔的塔位編碼規則不同，易造成混亂。' },
+                    { icon: '📜', title: '文件規範差異', text: '兩座塔的權狀、契約、管理費規範各不相同。' }
+                ],
+                solutions: [
+                    { icon: '🌐', title: '多園區架構', text: '系統設計需原生支援多據點、多寶塔管理。' },
+                    { icon: '📏', title: '統一編碼規則', text: '建立全局唯一的編碼系統，避免資料衝突。' },
+                    { icon: '📊', title: '跨園區報表', text: '系統能產出單一寶塔報表，也能合併產出總報表。' }
+                ]
+            },
+            office: {
+                title: '辦公室拆除與重建',
+                challenges: [
+                    { icon: '🚧', title: '影響日常運作', text: '辦公室施工期間可能干擾客戶服務與行政工作。' },
+                    { icon: '🏢', title: '臨時辦公需求', text: '需要找到合適的臨時辦公地點與設施。' },
+                    { icon: '🔌', title: '新IT設施配合', text: '新辦公室的機房、網路佈線需與系統需求同步。' }
+                ],
+                solutions: [
+                    { icon: '🚚', title: '規劃臨時據點', text: '預先租賃或安排臨時辦公室，確保服務不中斷。' },
+                    { icon: '☁️', title: '雲端優先策略', text: '將系統部署於雲端，降低對實體辦公室的依賴。' },
+                    { icon: '⚡', title: '新機房規劃', text: '規劃UPS不斷電、雙線路備援與門禁安全設施。' }
+                ]
+            }
+        };
+
+        const tabContentContainer = document.getElementById('tab-content');
+        const tabButtons = document.querySelectorAll('.tab-btn');
+
+        function renderTabContent(tabKey) {
+            const data = contentData[tabKey];
+            let challengesHtml = data.challenges.map(item => `
+                <div class="flex items-start space-x-4 mb-4">
+                    <div class="text-3xl">${item.icon}</div>
+                    <div>
+                        <h4 class="font-bold text-[#3d405b]">${item.title}</h4>
+                        <p class="text-gray-600">${item.text}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            let solutionsHtml = data.solutions.map(item => `
+                 <div class="flex items-start space-x-4 mb-4">
+                    <div class="text-3xl">${item.icon}</div>
+                    <div>
+                        <h4 class="font-bold text-[#3d405b]">${item.title}</h4>
+                        <p class="text-gray-600">${item.text}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            tabContentContainer.style.opacity = 0;
+            setTimeout(() => {
+                tabContentContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                        <div class="bg-white p-8 rounded-lg shadow-lg border-l-4 border-[#e07a5f]">
+                            <h3 class="text-2xl font-bold mb-6 text-[#e07a5f]">挑戰 Challenge</h3>
+                            ${challengesHtml}
+                        </div>
+                        <div class="bg-white p-8 rounded-lg shadow-lg border-l-4 border-[#81b29a]">
+                            <h3 class="text-2xl font-bold mb-6 text-[#81b29a]">對策 Solution</h3>
+                            ${solutionsHtml}
+                        </div>
+                    </div>
+                `;
+                tabContentContainer.style.opacity = 1;
+            }, 300);
+        }
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                renderTabContent(button.dataset.tab);
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTabContent('database');
+
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            timelineItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const details = item.querySelector('.timeline-details');
+                    details.classList.toggle('hidden');
                 });
             });
 
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
             const navLinks = document.querySelectorAll('.nav-link');
             const sections = document.querySelectorAll('section');
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        navLinks.forEach(link => {
-                            link.classList.remove('active');
-                            if (link.getAttribute('href').substring(1) === entry.target.id) {
-                                link.classList.add('active');
-                            }
-                        });
-                    }
-                });
-            }, { threshold: 0.5 });
-
-            sections.forEach(section => {
-                observer.observe(section);
-            });
-
+            function changeNav() {
+                let index = sections.length;
+                while(--index && window.scrollY + 100 < sections[index].offsetTop) {}
+                
+                navLinks.forEach((link) => link.classList.remove('active'));
+                
+                const activeLink = document.querySelector(`.nav-link[href="#${sections[index].id}"]`);
+                if(activeLink) {
+                   activeLink.classList.add('active');
+                }
+            }
+            
             navLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    const targetId = link.getAttribute('href');
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        targetElement.scrollIntoView({ behavior: 'smooth' });
+                    document.querySelector(link.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    if(mobileMenu.classList.contains('hidden') === false){
+                        mobileMenu.classList.add('hidden');
                     }
                 });
             });
 
-            if (navLinks.length > 0) {
-                navLinks[0].classList.add('active');
-            }
+            window.addEventListener('scroll', changeNav);
+            changeNav();
         });
     </script>
 </body>
