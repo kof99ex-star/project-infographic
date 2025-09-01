@@ -8,335 +8,433 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Calm Corporate -->
-    <!-- Application Structure Plan: The application is designed around four key thematic sections: 1. Project Overview, 2. Core Challenges & Solutions, 3. Strategic Roadmap, and 4. Key Discussion Points. This thematic structure replaces the linear format of the source report, allowing users to navigate directly to their area of interest. The core of the application is the "Challenges & Solutions" section, which uses an interactive card system. Users can select a major project area (Database, Second Tower, Office) to dynamically display the associated problems and their proposed solutions side-by-side. This design choice facilitates direct comparison and understanding of the project's core components. An interactive timeline visualizes the phased rollout, making the strategic plan more digestible. This user-centric design improves clarity and engagement compared to a static document. -->
-    <!-- Visualization & Content Choices: Report Info: Phased project plan -> Goal: Organize & show change -> Viz/Method: Interactive HTML/CSS Timeline -> Interaction: Clicking a phase reveals detailed tasks -> Justification: Transforms a static list into an engaging, easy-to-understand process flow. Report Info: Challenges and solutions for three distinct projects -> Goal: Compare & Inform -> Viz/Method: Two-column card layout -> Interaction: Buttons filter content by project, showing related challenges and solutions -> Justification: Allows users to focus on one project at a time and directly see the relationship between a problem and its solution. No traditional charts are used as the source material is qualitative and strategic, not quantitative. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Serene Professional -->
+    <!-- Application Structure Plan: The application is designed as a single-page dashboard with a top navigation bar to switch between three core views: '專案總覽' (Project Overview), '功能需求' (Functional Requirements), and '挑戰與策略' (Challenges & Strategy). This structure logically separates the high-level project summary from the granular details and risk assessment. The 'Functional Requirements' view uses a secondary tabbed navigation for each department, allowing stakeholders to easily focus on specific areas without being overwhelmed. This task-oriented design prioritizes clarity and efficient information retrieval for both management and technical teams. -->
+    <!-- Visualization & Content Choices: 
+        - Project Overview: Uses key metric cards for at-a-glance understanding. A horizontal timeline (built with HTML/CSS) visualizes the multi-phase project plan, making the roadmap intuitive. A donut chart (Chart.js on Canvas) shows the distribution of requirements by department, offering a quick visual summary of workload.
+        - Functional Requirements: Presented in a tabbed interface. Each requirement is a card with clear icons (Unicode) and structured text. This organizes a large amount of text into digestible, department-focused chunks. The "Single Window Operation" is highlighted as a key UX principle.
+        - Challenges & Strategy: A two-column grid layout directly pairs each challenge with its corresponding solution. This 'problem-solution' format is highly effective for clear communication and strategic planning.
+        - Interaction: Navigation clicks switch between full-page views. Tab clicks within the requirements section switch content panes. This simple, predictable interaction model ensures ease of use. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f8f7f4;
-            color: #3d405b;
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background-color: #F7F9FC;
         }
         .nav-link {
-            transition: color 0.3s ease, border-bottom-color 0.3s ease;
+            transition: all 0.3s ease;
             border-bottom: 2px solid transparent;
         }
-        .nav-link.active, .nav-link:hover {
-            color: #81b29a;
-            border-bottom-color: #81b29a;
+        .nav-link.active {
+            border-bottom-color: #4A90E2;
+            color: #2C3E50;
+            font-weight: 600;
         }
-        .tab-btn {
+        .req-tab {
             transition: all 0.3s ease;
         }
-        .tab-btn.active {
-            background-color: #81b29a;
-            color: #ffffff;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        .req-tab.active {
+            background-color: #4A90E2;
+            color: white;
         }
-        .timeline-item::before {
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
+        .req-content {
+            display: none;
+        }
+        .req-content.active {
+            display: block;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+            padding-left: 2.5rem;
+        }
+        .timeline-item:before {
             content: '';
             position: absolute;
-            top: 1.25rem;
-            left: -0.6rem;
-            width: 1.25rem;
-            height: 1.25rem;
-            background-color: #f8f7f4;
-            border: 4px solid #81b29a;
+            left: 0.5rem;
+            top: 0.5rem;
+            width: 1px;
+            height: 100%;
+            background-color: #CBD5E1;
+        }
+        .timeline-item:last-child:before {
+            display: none;
+        }
+        .timeline-marker {
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
             border-radius: 50%;
-            z-index: 10;
+            background-color: #4A90E2;
+            border: 2px solid white;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
         }
     </style>
 </head>
-<body class="antialiased">
+<body class="text-gray-800">
 
-    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
-        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <h1 class="text-xl md:text-2xl font-bold text-[#3d405b]">納骨塔系統建置規劃</h1>
-            <div class="hidden md:flex space-x-8">
-                <a href="#overview" class="nav-link font-medium pb-1">專案總覽</a>
-                <a href="#challenges" class="nav-link font-medium pb-1">挑戰與對策</a>
-                <a href="#strategy" class="nav-link font-medium pb-1">整體策略</a>
-                <a href="#discussion" class="nav-link font-medium pb-1">討論重點</a>
-            </div>
-            <button id="mobile-menu-button" class="md:hidden text-2xl">☰</button>
-        </nav>
-        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 space-y-2">
-            <a href="#overview" class="block nav-link font-medium py-1">專案總覽</a>
-            <a href="#challenges" class="block nav-link font-medium py-1">挑戰與對策</a>
-            <a href="#strategy" class="block nav-link font-medium py-1">整體策略</a>
-            <a href="#discussion" class="block nav-link font-medium py-1">討論重點</a>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-6 py-12">
-        <section id="overview" class="mb-20 text-center">
-            <h2 class="text-4xl font-bold text-[#3d405b] mb-4">新資料庫系統建置與未來營運規劃</h2>
-            <p class="max-w-3xl mx-auto text-lg text-gray-600 mb-8">
-                為因應公司超過30年的營運歷史、現有系統停止更新，以及未來4年第二寶塔的興建計畫，我們必須建置一套全新的整合性資料庫系統。本計畫旨在解決當前挑戰，並為未來的多園區營運奠定穩固基礎。
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#81b29a]">
-                    <h3 class="text-xl font-bold mb-2">系統現代化</h3>
-                    <p class="text-gray-600">取代停止更新的舊系統，整合發票開立、塔位保留、權狀與合約製作等核心功能。</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#e07a5f]">
-                    <h3 class="text-xl font-bold mb-2">支援未來擴展</h3>
-                    <p class="text-gray-600">建立可支援多園區管理的架構，為第二寶塔的興建與營運預作準備。</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-[#f2cc8f]">
-                    <h3 class="text-xl font-bold mb-2">提升營運效率</h3>
-                    <p class="text-gray-600">統一資料格式，強化資安備份機制，並配合辦公室重建進行IT設施升級。</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="challenges" class="mb-20">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-[#3d405b] mb-4">核心挑戰與解決對策</h2>
-                <p class="max-w-2xl mx-auto text-lg text-gray-600">
-                    本專案涵蓋三大範疇：系統轉移、新塔興建與辦公室重建。每個範疇都有其獨特的挑戰與相對應的解決方案。點擊下方按鈕以深入了解各項目的具體規劃。
-                </p>
-            </div>
-            <div id="tabs" class="flex flex-wrap justify-center gap-4 mb-8">
-                <button class="tab-btn px-6 py-2 font-semibold rounded-full bg-white shadow-sm active" data-tab="database">🗃️ 資料庫系統</button>
-                <button class="tab-btn px-6 py-2 font-semibold rounded-full bg-white shadow-sm" data-tab="tower">🏗️ 第二寶塔</button>
-                <button class="tab-btn px-6 py-2 font-semibold rounded-full bg-white shadow-sm" data-tab="office">🏢 辦公室重建</button>
-            </div>
-
-            <div id="tab-content" class="transition-opacity duration-500 ease-in-out">
-            </div>
-        </section>
-
-        <section id="strategy" class="mb-20">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-[#3d405b] mb-4">整體策略與執行藍圖</h2>
-                <p class="max-w-2xl mx-auto text-lg text-gray-600">
-                    建議成立跨部門專案小組，並採用分階段驗收方式，以確保專案順利推進。此系統的長遠規劃將以未來10年的營運規模為目標進行設計。
-                </p>
-            </div>
-            <div class="relative pl-8 border-l-4 border-gray-200">
-                <div id="timeline-item-1" class="timeline-item mb-12 cursor-pointer">
-                    <h3 class="text-2xl font-bold text-[#3d405b]">第 1 階段：核心建立</h3>
-                    <p class="text-gray-500 mb-2">主要目標：確保資料無痛轉移與核心功能穩定上線。</p>
-                    <div class="timeline-details hidden bg-gray-50 p-4 rounded-lg">
-                        <p><strong>驗收項目：</strong></p>
-                        <ul class="list-disc list-inside text-gray-600">
-                            <li>資料盤點、清理與成功移轉</li>
-                            <li>核心模組（塔位保留、合約、權狀製作）開發與測試</li>
+    <div class="min-h-screen bg-[#F7F9FC]">
+        <header class="bg-white shadow-sm sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex flex-col sm:flex-row justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-[#2C3E50]">納骨塔新資料庫系統建置企劃</h1>
+                        <p class="text-sm text-gray-500">專案需求與策略總覽</p>
+                    </div>
+                    <nav class="mt-4 sm:mt-0">
+                        <ul class="flex space-x-6">
+                            <li><a href="#" class="nav-link text-gray-600 hover:text-[#2C3E50] pb-1 active" data-target="overview">專案總覽</a></li>
+                            <li><a href="#" class="nav-link text-gray-600 hover:text-[#2C3E50] pb-1" data-target="requirements">功能需求</a></li>
+                            <li><a href="#" class="nav-link text-gray-600 hover:text-[#2C3E50] pb-1" data-target="challenges">挑戰與策略</a></li>
                         </ul>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- 專案總覽 Section -->
+            <section id="overview" class="page-content active">
+                 <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-[#2C3E50] mb-2">專案核心目標與藍圖</h2>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">本專案旨在建置一套整合性、高效率且具備未來擴充性的新資料庫系統，以取代停止更新的舊系統，並支援公司未來第二寶塔的興建與營運計畫。</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-center">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <p class="text-4xl font-bold text-[#4A90E2]">30+</p>
+                        <p class="text-gray-600 mt-2 font-semibold">年營運經驗</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <p class="text-4xl font-bold text-[#4A90E2]">3</p>
+                        <p class="text-gray-600 mt-2 font-semibold">大核心部門整合</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                        <p class="text-4xl font-bold text-[#4A90E2]">10</p>
+                        <p class="text-gray-600 mt-2 font-semibold">年長遠規模設計</p>
                     </div>
                 </div>
-                <div id="timeline-item-2" class="timeline-item mb-12 cursor-pointer">
-                    <h3 class="text-2xl font-bold text-[#3d405b]">第 2 階段：功能擴充</h3>
-                    <p class="text-gray-500 mb-2">主要目標：完善財務與報表功能，提升管理效率。</p>
-                     <div class="timeline-details hidden bg-gray-50 p-4 rounded-lg">
-                        <p><strong>驗收項目：</strong></p>
-                        <ul class="list-disc list-inside text-gray-600">
-                            <li>發票系統整合</li>
-                            <li>各類營運報表產出功能</li>
-                        </ul>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                    <div class="lg:col-span-3 bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                        <h3 class="text-2xl font-bold text-[#2C3E50] mb-6">專案推動時程規劃</h3>
+                        <div>
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <h4 class="font-bold text-lg text-[#2C3E50]">第一階段：核心系統建置</h4>
+                                <p class="text-gray-600">資料盤點、清理與移轉。完成銷售、塔位管理等核心功能模組的開發與上線。</p>
+                                <time class="text-sm text-gray-400">預計時程：6-8 個月</time>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <h4 class="font-bold text-lg text-[#2C3E50]">第二階段：財會與報表整合</h4>
+                                <p class="text-gray-600">整合發票開立系統，並完成所有財務、銷售及管理報表的開發與驗收。</p>
+                                <time class="text-sm text-gray-400">預計時程：3-4 個月</time>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <h4 class="font-bold text-lg text-[#2C3E50]">第三階段：跨園區管理擴充</h4>
+                                <p class="text-gray-600">建置多園區管理架構，為第二寶塔的營運預作準備，並完成跨園區報表功能。</p>
+                                <time class="text-sm text-gray-400">預計時程：4-6 個月</>
+                            </div>
+                             <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <h4 class="font-bold text-lg text-[#2C3E50]">第四階段：系統全面上線</h4>
+                                <p class="text-gray-600">新舊系統完成交接，進行員工全面教育訓練，發布標準作業流程(SOP)。</p>
+                                <time class="text-sm text-gray-400">長期目標</time>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                        <h3 class="text-2xl font-bold text-[#2C3E50] mb-6 text-center">功能需求分佈</h3>
+                         <p class="text-gray-600 text-center mb-4">系統功能主要圍繞三大部門的核心業務流程，其中塔位管理的功能最為複雜。</p>
+                        <div class="chart-container">
+                            <canvas id="requirementsChart"></canvas>
+                        </div>
                     </div>
                 </div>
-                <div id="timeline-item-3" class="timeline-item cursor-pointer">
-                    <h3 class="text-2xl font-bold text-[#3d405b]">第 3 階段：未來擴展</h3>
-                    <p class="text-gray-500 mb-2">主要目標：實現跨園區管理，為第二寶塔營運做準備。</p>
-                     <div class="timeline-details hidden bg-gray-50 p-4 rounded-lg">
-                        <p><strong>驗收項目：</strong></p>
-                        <ul class="list-disc list-inside text-gray-600">
-                            <li>多園區管理架構</li>
-                            <li>統一編碼與跨園區報表功能</li>
-                        </ul>
+
+            </section>
+
+            <!-- 功能需求 Section -->
+            <section id="requirements" class="page-content">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-[#2C3E50] mb-2">系統功能需求詳情</h2>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">本系統將整合三大部門的日常作業，旨在打造一個以客戶為中心、流程自動化的「單一窗口作業」平台，提升整體營運效率。</p>
+                </div>
+                
+                <div class="flex justify-center mb-8 bg-gray-200 rounded-full p-1 max-w-md mx-auto">
+                    <button class="req-tab w-full py-2 px-4 rounded-full text-gray-700 font-semibold active" data-target="req-site">寶塔現場</button>
+                    <button class="req-tab w-full py-2 px-4 rounded-full text-gray-700 font-semibold" data-target="req-management">塔位管理</button>
+                    <button class="req-tab w-full py-2 px-4 rounded-full text-gray-700 font-semibold" data-target="req-accounting">會計</button>
+                </div>
+
+                <div id="req-site" class="req-content active">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">🔍 即時塔位查詢</h4>
+                            <p class="text-gray-600">提供直覺介面，快速查詢塔位及牌位的售價、銷售狀態（已售、未售、保留）及詳細位置。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">🗺️ 視覺化銷售地圖</h4>
+                            <p class="text-gray-600">提供樓層平面圖，點擊即可查看塔位詳情與狀態，方便對客戶進行介紹與展示。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">📋 保留與取消管理</h4>
+                            <p class="text-gray-600">記錄客戶保留資訊，並能輸入經銷商與業務員資料，供後續追蹤及塔位管理模組直接利用。</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+                
+                <div id="req-management" class="req-content">
+                    <div class="bg-white p-8 rounded-lg shadow-sm border mb-6">
+                        <h4 class="font-bold text-xl mb-2 text-[#4A90E2]">🌟 單一窗口作業核心</h4>
+                        <p class="text-gray-600">此為系統設計核心。在客戶資料介面，能一鍵連結至所有相關功能（如銷售、遷出、權狀作業），系統自動帶入資料，使用者僅需填寫關鍵資訊，大幅簡化流程。</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">💰 銷售管理</h4>
+                            <p class="text-gray-600">建立完整銷售紀錄，包含日期、經銷商、業務員、付款方式等，並自動與權狀、發票等模組串接。</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">📄 自動化文件生成</h4>
+                            <p class="text-gray-600">根據客戶與塔位資料，自動生成制式化的權狀與定型化契約，減少人工錯誤。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">🔄 生命週期管理</h4>
+                            <p class="text-gray-600">完整記錄塔位與牌位從銷售、使用、繳費到遷出的所有狀態與歷史紀錄。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">📥 使用與遷出管理</h4>
+                            <p class="text-gray-600">標準化先人/牌位進塔與遷出的作業流程，確保資料可追溯。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">↔️ 內部遷移管理</h4>
+                            <p class="text-gray-600">支援塔位與牌位在寶塔內的遷移作業，並記錄完整的歷史軌跡。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">📜 權狀相關管理</h4>
+                            <p class="text-gray-600">包含自動流水號、領取登記與狀態查詢，並支援作廢、補發、換發、過戶、繼承等複雜流程。</p>
+                        </div>
+                         <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">📊 多元化報表產出</h4>
+                            <p class="text-gray-600">產出各類管理報表，包含銷售使用率、遷出入紀錄、庫存、以及全面的塔位與牌位異動清單報表。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">🌐 線上查詢即時同步</h4>
+                            <p class="text-gray-600">系統資料異動時，自動同步更新至先人線上查詢網頁，無需人工轉檔上傳，確保資訊即時準確。</p>
+                        </div>
+                    </div>
+                </div>
 
-        <section id="discussion">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-[#3d405b] mb-4">關鍵討論重點</h2>
-                <p class="max-w-2xl mx-auto text-lg text-gray-600">
-                    為確保專案成功，以下幾點需要與會人員共同討論並達成共識，以作為後續執行的重要依據。
-                </p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                 <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">資料移轉</h3>
-                    <p class="text-gray-600">討論資料清理、格式標準化的可行性與預計時程。</p>
+                <div id="req-accounting" class="req-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">🧾 發票開立與管理</h4>
+                            <p class="text-gray-600">與發票系統整合，支援一筆銷售單對應多張發票。每張發票號碼皆與對應的塔位/牌位資訊綁定，方便追蹤查詢。</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-2">📉 自動化財務報表</h4>
+                            <p class="text-gray-600">自動彙整收入，產出月/季/年度銷貨總額、多維度銷售分析及不同收入來源分析等報表。</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">開發優先序</h3>
-                    <p class="text-gray-600">確認系統模組（核心、發票、報表）的開發優先順序。</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">管理架構</h3>
-                    <p class="text-gray-600">設計能同時管理新舊雙塔的系統架構與編碼規則。</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">資安備份</h3>
-                    <p class="text-gray-600">審核每日異地備份與雲端備援的具體方案與成本。</p>
-                </div>
-                <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">重建影響</h3>
-                    <p class="text-gray-600">評估辦公室重建期間，對系統建置與日常營運的衝擊。</p>
-                </div>
-                 <div class="bg-white p-6 rounded-lg shadow-sm hover:shadow-lg transition-shadow">
-                    <h3 class="font-bold text-lg text-[#81b29a] mb-2">長期規劃</h3>
-                    <p class="text-gray-600">確保系統設計具備彈性，能滿足未來永續的發展需求。</p>
-                </div>
-            </div>
-        </section>
-    </main>
+            </section>
 
-    <footer class="bg-white mt-20 border-t">
-        <div class="container mx-auto px-6 py-4 text-center text-gray-500">
-            <p>&copy; 2025 高雄觀音山金寶塔建置專案分析 by 瑋志</p>
-        </div>
-    </footer>
+            <!-- 挑戰與策略 Section -->
+            <section id="challenges" class="page-content">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-[#2C3E50] mb-2">資料轉移挑戰與應對策略</h2>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">在系統轉換期間，我們預見了幾個潛在挑戰。以下是針對各項挑戰提出的解決方案，以確保專案順利推動。</p>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
+                        <div>
+                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 1：資料不一致與缺漏</h3>
+                            <p class="text-gray-600">舊系統資料格式不統一，存在人為輸入錯誤、缺漏或未標準化的欄位，可能影響新系統的準確性。</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
+                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
+                            <p class="text-gray-700">在移轉前進行大量的**資料盤點與清洗**，建立標準化範本，將錯誤資料修正後再匯入新系統。</p>
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
+                        <div>
+                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 2：歷史資料的複雜性</h3>
+                            <p class="text-gray-600">部分歷史權狀或契約可能包含特殊條款或非標準格式，無法自動轉移。</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
+                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
+                            <p class="text-gray-700">對特殊案例進行**人工逐一審核**，並在系統中建立對應的處理機制或備註欄位。</p>
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
+                        <div>
+                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 3：平行測試期間的混亂</h3>
+                            <p class="text-gray-600">新舊系統並行期間，容易造成資料同步問題，並增加員工操作的複雜性與出錯風險。</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
+                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
+                            <p class="text-gray-700">規劃明確的**平行測試期 (3-6個月)**，定義清楚的資料輸入規則，並加強員工訓練，確保過渡期平穩。</p>
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
+                        <div>
+                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 4：資安與備份風險</h3>
+                            <p class="text-gray-600">大量客戶與財務資料在移轉過程中，若缺乏完善的加密與備份機制，將面臨外洩或遺失的風險。</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
+                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
+                            <p class="text-gray-700">建立**每日異地備份**與**雲端備援**機制，並對敏感資料進行加密處理，確保資料安全無虞。</p>
+                        </div>
+                    </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
+                        <div>
+                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 5：系統效能衝擊</h3>
+                            <p class="text-gray-600">若歷史資料量龐大，一次性的大規模移轉可能導致系統效能大幅下降，影響日常運作。</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
+                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
+                            <p class="text-gray-700">規劃**分批次**或在**離峰時間**進行資料轉移，將對日常營運的衝擊降至最低。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="text-center py-6 mt-8 border-t">
+            <p class="text-gray-500 text-sm">&copy; 2025 納骨塔新資料庫系統建置專案. All Rights Reserved.</p>
+        </footer>
+    </div>
 
     <script>
-        const contentData = {
-            database: {
-                title: '資料庫系統轉移',
-                challenges: [
-                    { icon: '🔄', title: '資料移轉難度', text: '資料格式不一，存在遺漏與錯誤需耗時清理。' },
-                    { icon: '⏳', title: '新舊系統交接', text: '雙系統並行易造成資料混亂與操作失誤。' },
-                    { icon: '🎯', title: '功能需求龐大', text: '一次性開發所有功能可能導致專案延誤。' },
-                    { icon: '🔒', title: '資安與備份', text: '面臨資料外洩或因意外而遺失的風險。' }
-                ],
-                solutions: [
-                    { icon: '🧹', title: '資料盤點與清理', text: '移轉前進行資料標準化，確保資料品質。' },
-                    { icon: '⏸️', title: '平行測試期', text: '保留雙系統並行3–6個月，確保新系統穩定。' },
-                    { icon: '🧩', title: '模組化開發', text: '優先開發核心功能，再逐步擴充附加功能。' },
-                    { icon: '💾', title: '強化備份機制', text: '執行每日異地備份，並建立雲端備援。' }
-                ]
-            },
-            tower: {
-                title: '第二寶塔興建與營運',
-                challenges: [
-                    { icon: '🏛️', title: '多園區管理', text: '現有系統無法同時管理兩座不同地點的寶塔。' },
-                    { icon: '🔢', title: '編碼不一致', text: '舊塔與新塔的塔位編碼規則不同，易造成混亂。' },
-                    { icon: '📜', title: '文件規範差異', text: '兩座塔的權狀、契約、管理費規範各不相同。' }
-                ],
-                solutions: [
-                    { icon: '🌐', title: '多園區架構', text: '系統設計需原生支援多據點、多寶塔管理。' },
-                    { icon: '📏', title: '統一編碼規則', text: '建立全局唯一的編碼系統，避免資料衝突。' },
-                    { icon: '📊', title: '跨園區報表', text: '系統能產出單一寶塔報表，也能合併產出總報表。' }
-                ]
-            },
-            office: {
-                title: '辦公室拆除與重建',
-                challenges: [
-                    { icon: '🚧', title: '影響日常運作', text: '辦公室施工期間可能干擾客戶服務與行政工作。' },
-                    { icon: '🏢', title: '臨時辦公需求', text: '需要找到合適的臨時辦公地點與設施。' },
-                    { icon: '🔌', title: '新IT設施配合', text: '新辦公室的機房、網路佈線需與系統需求同步。' }
-                ],
-                solutions: [
-                    { icon: '🚚', title: '規劃臨時據點', text: '預先租賃或安排臨時辦公室，確保服務不中斷。' },
-                    { icon: '☁️', title: '雲端優先策略', text: '將系統部署於雲端，降低對實體辦公室的依賴。' },
-                    { icon: '⚡', title: '新機房規劃', text: '規劃UPS不斷電、雙線路備援與門禁安全設施。' }
-                ]
-            }
-        };
-
-        const tabContentContainer = document.getElementById('tab-content');
-        const tabButtons = document.querySelectorAll('.tab-btn');
-
-        function renderTabContent(tabKey) {
-            const data = contentData[tabKey];
-            let challengesHtml = data.challenges.map(item => `
-                <div class="flex items-start space-x-4 mb-4">
-                    <div class="text-3xl">${item.icon}</div>
-                    <div>
-                        <h4 class="font-bold text-[#3d405b]">${item.title}</h4>
-                        <p class="text-gray-600">${item.text}</p>
-                    </div>
-                </div>
-            `).join('');
-
-            let solutionsHtml = data.solutions.map(item => `
-                 <div class="flex items-start space-x-4 mb-4">
-                    <div class="text-3xl">${item.icon}</div>
-                    <div>
-                        <h4 class="font-bold text-[#3d405b]">${item.title}</h4>
-                        <p class="text-gray-600">${item.text}</p>
-                    </div>
-                </div>
-            `).join('');
-
-            tabContentContainer.style.opacity = 0;
-            setTimeout(() => {
-                tabContentContainer.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-                        <div class="bg-white p-8 rounded-lg shadow-lg border-l-4 border-[#e07a5f]">
-                            <h3 class="text-2xl font-bold mb-6 text-[#e07a5f]">挑戰 Challenge</h3>
-                            ${challengesHtml}
-                        </div>
-                        <div class="bg-white p-8 rounded-lg shadow-lg border-l-4 border-[#81b29a]">
-                            <h3 class="text-2xl font-bold mb-6 text-[#81b29a]">對策 Solution</h3>
-                            ${solutionsHtml}
-                        </div>
-                    </div>
-                `;
-                tabContentContainer.style.opacity = 1;
-            }, 300);
-        }
-
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                renderTabContent(button.dataset.tab);
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            renderTabContent('database');
-
-            const timelineItems = document.querySelectorAll('.timeline-item');
-            timelineItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const details = item.querySelector('.timeline-details');
-                    details.classList.toggle('hidden');
-                });
-            });
-
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-            
+        document.addEventListener('DOMContentLoaded', function () {
             const navLinks = document.querySelectorAll('.nav-link');
-            const sections = document.querySelectorAll('section');
+            const pages = document.querySelectorAll('.page-content');
+            const reqTabs = document.querySelectorAll('.req-tab');
+            const reqContents = document.querySelectorAll('.req-content');
 
-            function changeNav() {
-                let index = sections.length;
-                while(--index && window.scrollY + 100 < sections[index].offsetTop) {}
-                
-                navLinks.forEach((link) => link.classList.remove('active'));
-                
-                const activeLink = document.querySelector(`.nav-link[href="#${sections[index].id}"]`);
-                if(activeLink) {
-                   activeLink.classList.add('active');
-                }
+            function switchPage(targetId) {
+                pages.forEach(page => {
+                    page.classList.toggle('active', page.id === targetId);
+                });
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.dataset.target === targetId);
+                });
             }
-            
+
+            function switchReqTab(targetId) {
+                reqContents.forEach(content => {
+                    content.classList.toggle('active', content.id === targetId);
+                });
+                reqTabs.forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.target === targetId);
+                });
+            }
+
             navLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    document.querySelector(link.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                    if(mobileMenu.classList.contains('hidden') === false){
-                        mobileMenu.classList.add('hidden');
-                    }
+                    const targetId = e.currentTarget.dataset.target;
+                    switchPage(targetId);
                 });
             });
 
-            window.addEventListener('scroll', changeNav);
-            changeNav();
+            reqTabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = e.currentTarget.dataset.target;
+                    switchReqTab(targetId);
+                });
+            });
+
+            // Chart.js implementation
+            const ctx = document.getElementById('requirementsChart').getContext('2d');
+            const requirementsData = {
+                // Approximate counts based on the detailed list
+                site: 3,
+                management: 8,
+                accounting: 2
+            };
+            const total = Object.values(requirementsData).reduce((a, b) => a + b, 0);
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        `寶塔現場 (${Math.round(requirementsData.site/total*100)}%)`, 
+                        `塔位管理 (${Math.round(requirementsData.management/total*100)}%)`, 
+                        `會計 (${Math.round(requirementsData.accounting/total*100)}%)`
+                    ],
+                    datasets: [{
+                        label: '功能需求數量',
+                        data: [requirementsData.site, requirementsData.management, requirementsData.accounting],
+                        backgroundColor: [
+                            'rgba(74, 144, 226, 0.8)', // Blue
+                            'rgba(80, 227, 194, 0.8)', // Teal
+                            'rgba(245, 166, 35, 0.8)'  // Orange
+                        ],
+                        borderColor: [
+                            'rgba(74, 144, 226, 1)',
+                            'rgba(80, 227, 194, 1)',
+                            'rgba(245, 166, 35, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: "'Inter', 'Noto Sans TC', sans-serif"
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + ' 項功能';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         });
     </script>
 </body>
