@@ -10,12 +10,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Serene Professional -->
-    <!-- Application Structure Plan: The application is designed as a single-page dashboard with a top navigation bar to switch between three core views: '專案總覽' (Project Overview), '功能需求' (Functional Requirements), and '挑戰與策略' (Challenges & Strategy). This structure logically separates the high-level project summary from the granular details and risk assessment. The 'Functional Requirements' view uses a secondary tabbed navigation for each department, allowing stakeholders to easily focus on specific areas without being overwhelmed. This task-oriented design prioritizes clarity and efficient information retrieval for both management and technical teams. -->
+    <!-- Application Structure Plan: The application uses a single-page dashboard with three main sections: '專案總覽' (Overview), '功能需求' (Requirements), and '挑戰與策略' (Challenges), accessible via a sticky top navigation. This structure effectively separates the project's strategic goals from its detailed technical specifications and risk analysis. The 'Requirements' section is further organized with department-specific tabs, allowing stakeholders to easily navigate to their area of interest. This information architecture is designed for maximum clarity and efficient communication during project planning and development. -->
     <!-- Visualization & Content Choices: 
-        - Project Overview: Uses key metric cards for at-a-glance understanding. A horizontal timeline (built with HTML/CSS) visualizes the multi-phase project plan, making the roadmap intuitive. A donut chart (Chart.js on Canvas) shows the distribution of requirements by department, offering a quick visual summary of workload.
-        - Functional Requirements: Presented in a tabbed interface. Each requirement is a card with clear icons (Unicode) and structured text. This organizes a large amount of text into digestible, department-focused chunks. The "Single Window Operation" is highlighted as a key UX principle.
-        - Challenges & Strategy: A two-column grid layout directly pairs each challenge with its corresponding solution. This 'problem-solution' format is highly effective for clear communication and strategic planning.
-        - Interaction: Navigation clicks switch between full-page views. Tab clicks within the requirements section switch content panes. This simple, predictable interaction model ensures ease of use. -->
+        - Project Overview: High-level information is presented using dynamic stat cards. A project timeline, built with semantic HTML and styled with CSS, illustrates the phased implementation plan. A Chart.js donut chart provides a visual breakdown of functional complexity by department, highlighting where the most development effort is concentrated.
+        - Functional Requirements: A tabbed interface organizes a large number of detailed requirements. Each function is presented as a card with a Unicode icon for quick visual reference. Crucial technical specifications (e.g., file formats like .cdr/.btw, character set support) and user experience principles ('Single Window Operation') are explicitly stated.
+        - Challenges & Strategy: A two-column grid layout directly contrasts potential problems with proposed solutions. This format is highly effective for risk management and strategic planning, ensuring all stakeholders are aware of potential hurdles, including the critical need for '全字庫' font support.
+        - Interaction: User interaction is streamlined. Clicks on the main navigation switch the primary content view, while clicks on the department tabs update the detailed requirements display. This predictable, two-level navigation ensures the application is intuitive to use. -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
@@ -40,6 +40,11 @@
         }
         .page-content {
             display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .page-content.active {
             display: block;
@@ -76,6 +81,7 @@
             border-radius: 50%;
             background-color: #4A90E2;
             border: 2px solid white;
+            box-shadow: 0 0 0 3px #F7F9FC;
         }
         .chart-container {
             position: relative;
@@ -101,7 +107,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-center">
                     <div>
                         <h1 class="text-2xl font-bold text-[#2C3E50]">納骨塔新資料庫系統建置企劃</h1>
-                        <p class="text-sm text-gray-500">專案需求與策略總覽</p>
+                        <p class="text-sm text-gray-500">最終版功能需求與策略總覽</p>
                     </div>
                     <nav class="mt-4 sm:mt-0">
                         <ul class="flex space-x-6">
@@ -123,15 +129,15 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-center">
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
                         <p class="text-4xl font-bold text-[#4A90E2]">30+</p>
                         <p class="text-gray-600 mt-2 font-semibold">年營運經驗</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
                         <p class="text-4xl font-bold text-[#4A90E2]">3</p>
                         <p class="text-gray-600 mt-2 font-semibold">大核心部門整合</p>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
                         <p class="text-4xl font-bold text-[#4A90E2]">10</p>
                         <p class="text-gray-600 mt-2 font-semibold">年長遠規模設計</p>
                     </div>
@@ -140,7 +146,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
                     <div class="lg:col-span-3 bg-white p-8 rounded-xl shadow-md border border-gray-200">
                         <h3 class="text-2xl font-bold text-[#2C3E50] mb-6">專案推動時程規劃</h3>
-                        <div>
+                        <div class="relative">
                             <div class="timeline-item">
                                 <div class="timeline-marker"></div>
                                 <h4 class="font-bold text-lg text-[#2C3E50]">第一階段：核心系統建置</h4>
@@ -150,14 +156,14 @@
                             <div class="timeline-item">
                                 <div class="timeline-marker"></div>
                                 <h4 class="font-bold text-lg text-[#2C3E50]">第二階段：財會與報表整合</h4>
-                                <p class="text-gray-600">整合發票開立系統，並完成所有財務、銷售及管理報表的開發與驗收。</p>
+                                <p class="text-gray-600">整合電子發票系統，並完成所有財務、銷售及管理報表的開發與驗收。</p>
                                 <time class="text-sm text-gray-400">預計時程：3-4 個月</time>
                             </div>
                             <div class="timeline-item">
                                 <div class="timeline-marker"></div>
                                 <h4 class="font-bold text-lg text-[#2C3E50]">第三階段：跨園區管理擴充</h4>
                                 <p class="text-gray-600">建置多園區管理架構，為第二寶塔的營運預作準備，並完成跨園區報表功能。</p>
-                                <time class="text-sm text-gray-400">預計時程：4-6 個月</>
+                                <time class="text-sm text-gray-400">預計時程：4-6 個月</time>
                             </div>
                              <div class="timeline-item">
                                 <div class="timeline-marker"></div>
@@ -169,13 +175,12 @@
                     </div>
                      <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-md border border-gray-200">
                         <h3 class="text-2xl font-bold text-[#2C3E50] mb-6 text-center">功能需求分佈</h3>
-                         <p class="text-gray-600 text-center mb-4">系統功能主要圍繞三大部門的核心業務流程，其中塔位管理的功能最為複雜。</p>
+                         <p class="text-gray-600 text-center mb-4">系統功能主要圍繞三大部門的核心業務流程，其中塔位管理與會計系統的功能最為全面與複雜。</p>
                         <div class="chart-container">
                             <canvas id="requirementsChart"></canvas>
                         </div>
                     </div>
                 </div>
-
             </section>
 
             <!-- 功能需求 Section -->
@@ -193,15 +198,15 @@
 
                 <div id="req-site" class="req-content active">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border hover:border-blue-400 transition-colors">
                             <h4 class="font-bold text-lg mb-2">🔍 即時塔位查詢</h4>
                             <p class="text-gray-600">提供直覺介面，快速查詢塔位及牌位的售價、銷售狀態（已售、未售、保留）及詳細位置。</p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border hover:border-blue-400 transition-colors">
                             <h4 class="font-bold text-lg mb-2">🗺️ 視覺化銷售地圖</h4>
                             <p class="text-gray-600">提供樓層平面圖，點擊即可查看塔位詳情與狀態，方便對客戶進行介紹與展示。</p>
                         </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border hover:border-blue-400 transition-colors">
                             <h4 class="font-bold text-lg mb-2">📋 保留與取消管理</h4>
                             <p class="text-gray-600">記錄客戶保留資訊，並能輸入經銷商與業務員資料，供後續追蹤及塔位管理模組直接利用。</p>
                         </div>
@@ -209,55 +214,49 @@
                 </div>
                 
                 <div id="req-management" class="req-content">
-                    <div class="bg-white p-8 rounded-lg shadow-sm border mb-6">
+                    <div class="bg-white p-8 rounded-lg shadow-sm border mb-6 bg-blue-50 border-blue-200">
                         <h4 class="font-bold text-xl mb-2 text-[#4A90E2]">🌟 單一窗口作業核心</h4>
                         <p class="text-gray-600">此為系統設計核心。在客戶資料介面，能一鍵連結至所有相關功能（如銷售、遷出、權狀作業），系統自動帶入資料，使用者僅需填寫關鍵資訊，大幅簡化流程。</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">💰 銷售管理</h4>
-                            <p class="text-gray-600">建立完整銷售紀錄，包含日期、經銷商、業務員、付款方式等，並自動與權狀、發票等模組串接。</p>
-                        </div>
-                         <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">📄 自動化文件生成</h4>
-                            <p class="text-gray-600">根據客戶與塔位資料，自動生成制式化的權狀與定型化契約，減少人工錯誤。</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">🔄 生命週期管理</h4>
-                            <p class="text-gray-600">完整記錄塔位與牌位從銷售、使用、繳費到遷出的所有狀態與歷史紀錄。</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">📥 使用與遷出管理</h4>
-                            <p class="text-gray-600">標準化先人/牌位進塔與遷出的作業流程，確保資料可追溯。</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">↔️ 內部遷移管理</h4>
-                            <p class="text-gray-600">支援塔位與牌位在寶塔內的遷移作業，並記錄完整的歷史軌跡。</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">📜 權狀相關管理</h4>
-                            <p class="text-gray-600">包含自動流水號、領取登記與狀態查詢，並支援作廢、補發、換發、過戶、繼承等複雜流程。</p>
-                        </div>
-                         <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">📊 多元化報表產出</h4>
-                            <p class="text-gray-600">產出各類管理報表，包含銷售使用率、遷出入紀錄、庫存、以及全面的塔位與牌位異動清單報表。</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">🌐 線上查詢即時同步</h4>
-                            <p class="text-gray-600">系統資料異動時，自動同步更新至先人線上查詢網頁，無需人工轉檔上傳，確保資訊即時準確。</p>
-                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">📄 自動化文件生成</h4><p class="text-gray-600">根據客戶與塔位資料，自動生成制式化的權狀與定型化契約，減少人工錯誤。</p></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">🔄 生命週期管理</h4><p class="text-gray-600">完整記錄塔位與牌位從銷售、使用、繳費到遷出的所有狀態與歷史紀錄。</p></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">📥 使用與遷出管理</h4><p class="text-gray-600">標準化先人/牌位進塔與遷出的作業流程。進塔作業需能區分**撿骨、現往生、或從別的寶塔遷移**。</p></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">↔️ 內部遷移管理</h4><p class="text-gray-600">支援塔位與牌位在寶塔內的遷移作業，並記錄完整的歷史軌跡。</p></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">📜 權狀相關管理</h4><p class="text-gray-600">包含自動流水號、領取登記與狀態查詢，並支援作廢、補發、換發、過戶、繼承等複雜流程。</p></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">✍️ 印鑑管理</h4><p class="text-gray-600">儲存權狀人印鑑資料供隨時調閱核對。一位權狀人不論擁有多少塔位，都只對應一枚印鑑。</p></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2"> प्लेट 牌位內容查詢</h4><p class="text-gray-600">輸入編號即可查詢牌位正反面內容。需支援讀取正面 `.cdr` 與背面 `.btw` 檔案格式。</p></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">📊 多元化報表產出</h4><p class="text-gray-600">產出各類管理報表，包含銷售使用率、遷出入紀錄、庫存、異動清單、及依權狀人地址統計的客戶分析報表。</p></div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">🌐 線上查詢即時同步</h4><p class="text-gray-600">系統資料異動時，自動同步更新至先人線上查詢網頁，無需人工轉檔上傳，確保資訊即時準確。</p></div>
                     </div>
                 </div>
 
                 <div id="req-accounting" class="req-content">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">🧾 發票開立與管理</h4>
-                            <p class="text-gray-600">與發票系統整合，支援一筆銷售單對應多張發票。每張發票號碼皆與對應的塔位/牌位資訊綁定，方便追蹤查詢。</p>
+                            <h4 class="font-bold text-lg mb-4 border-b pb-2 text-blue-600">⚙️ 系統新增方面</h4>
+                            <ul class="space-y-3 text-gray-700 list-disc list-inside">
+                                <li>直接列印契約書</li>
+                                <li>直接列印管理費收據</li>
+                                <li>導入電子發票系統</li>
+                                <li>依發票金額列印客戶購買價格證明（發票樣式表格）</li>
+                            </ul>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-2">📉 自動化財務報表</h4>
-                            <p class="text-gray-600">自動彙整收入，產出月/季/年度銷貨總額、多維度銷售分析及不同收入來源分析等報表。</p>
+                            <h4 class="font-bold text-lg mb-4 border-b pb-2 text-blue-600">📈 報表方面</h4>
+                            <ul class="space-y-3 text-gray-700 list-disc list-inside">
+                                <li>管理費日常/急難支出(65%/35%)報表</li>
+                                <li>購買塔位牌位金額分別顯示（例：購二塔一牌）</li>
+                                <li>發票摘要明細表改以日期區間選擇</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <h4 class="font-bold text-lg mb-4 border-b pb-2 text-blue-600">🛠️ 目前需調整方面</h4>
+                            <ul class="space-y-3 text-gray-700 list-disc list-inside">
+                                <li>塔位依編號自動帶入公告價格</li>
+                                <li>發票查詢：點選查看資料時，原查詢視窗保留不關閉</li>
+                                <li>管理費以先人為單位，隨塔位調換移動，原塔位歸零</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -267,66 +266,36 @@
             <section id="challenges" class="page-content">
                 <div class="text-center mb-10">
                     <h2 class="text-3xl font-bold text-[#2C3E50] mb-2">資料轉移挑戰與應對策略</h2>
-                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">在系統轉換期間，我們預見了幾個潛在挑戰。以下是針對各項挑戰提出的解決方案，以確保專案順利推動。</p>
+                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">在系統轉換期間，我們預見了數個潛在挑戰。以下是針對各項挑戰提出的解決方案，以確保專案順利推動。</p>
                 </div>
 
                 <div class="space-y-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div>
-                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 1：資料不一致與缺漏</h3>
-                            <p class="text-gray-600">舊系統資料格式不統一，存在人為輸入錯誤、缺漏或未標準化的欄位，可能影響新系統的準確性。</p>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
-                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
-                            <p class="text-gray-700">在移轉前進行大量的**資料盤點與清洗**，建立標準化範本，將錯誤資料修正後再匯入新系統。</p>
-                        </div>
+                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 1：資料不一致與缺漏</h3><p class="text-gray-600">舊系統資料格式不統一，存在人為輸入錯誤、缺漏或未標準化的欄位，可能影響新系統的準確性。</p></div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">在移轉前進行大量的**資料盤點與清洗**，建立標準化範本，將錯誤資料修正後再匯入新系統。</p></div>
                     </div>
                      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div>
-                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 2：歷史資料的複雜性</h3>
-                            <p class="text-gray-600">部分歷史權狀或契約可能包含特殊條款或非標準格式，無法自動轉移。</p>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
-                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
-                            <p class="text-gray-700">對特殊案例進行**人工逐一審核**，並在系統中建立對應的處理機制或備註欄位。</p>
-                        </div>
+                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 2：歷史資料的複雜性</h3><p class="text-gray-600">部分歷史權狀或契約可能包含特殊條款或非標準格式，無法自動轉移。</p></div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">對特殊案例進行**人工逐一審核**，並在系統中建立對應的處理機制或備註欄位。</p></div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
+                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 3：特殊字體與字元支援</h3><p class="text-gray-600">舊系統使用「全字庫」來顯示難字。新系統必須能夠支援並正確顯示這些字體，避免資料遺失或亂碼。</p></div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">與開發商確認新系統的資料庫編碼與前端字體支援，確保能**完整相容「全字庫」字元集**。</p></div>
                     </div>
                      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div>
-                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 3：平行測試期間的混亂</h3>
-                            <p class="text-gray-600">新舊系統並行期間，容易造成資料同步問題，並增加員工操作的複雜性與出錯風險。</p>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
-                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
-                            <p class="text-gray-700">規劃明確的**平行測試期 (3-6個月)**，定義清楚的資料輸入規則，並加強員工訓練，確保過渡期平穩。</p>
-                        </div>
+                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 4：平行測試期間的混亂</h3><p class="text-gray-600">新舊系統並行期間，容易造成資料同步問題，並增加員工操作的複雜性與出錯風險。</p></div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">規劃明確的**平行測試期 (3-6個月)**，定義清楚的資料輸入規則，並加強員工訓練，確保過渡期平穩。</p></div>
                     </div>
                      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div>
-                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 4：資安與備份風險</h3>
-                            <p class="text-gray-600">大量客戶與財務資料在移轉過程中，若缺乏完善的備份機制，將面臨遺失的風險。</p>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
-                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
-                            <p class="text-gray-700">建立**每日異地備份**與**雲端備援**機制，確保資料安全無虞。</p>
-                        </div>
-                    </div>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div>
-                            <h3 class="text-xl font-bold text-red-600 mb-2">挑戰 5：系統效能衝擊</h3>
-                            <p class="text-gray-600">若歷史資料量龐大，一次性的大規模移轉可能導致系統效能大幅下降，影響日常運作。</p>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200">
-                            <h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3>
-                            <p class="text-gray-700">規劃**分批次**或在**離峰時間**進行資料轉移，將對日常營運的衝擊降至最低。</p>
-                        </div>
+                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 5：資安與備份風險</h3><p class="text-gray-600">大量客戶與財務資料在移轉過程中，若缺乏完善的加密與備份機制，將面臨外洩或遺失的風險。</p></div>
+                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">建立**每日異地備份**與**雲端備援**機制，並對敏感資料進行加密處理，確保資料安全無虞。</p></div>
                     </div>
                 </div>
             </section>
         </main>
         
         <footer class="text-center py-6 mt-8 border-t">
-            <p class="text-gray-500 text-sm">&copy; 2025 高雄觀音山金寶塔新資料庫系統分析-by 瑋志. All Rights Reserved.</p>
+            <p class="text-gray-500 text-sm">&copy; 2025 納骨塔新資料庫系統建置專案. All Rights Reserved.</p>
         </footer>
     </div>
 
@@ -344,6 +313,7 @@
                 navLinks.forEach(link => {
                     link.classList.toggle('active', link.dataset.target === targetId);
                 });
+                window.scrollTo(0, 0);
             }
 
             function switchReqTab(targetId) {
@@ -374,10 +344,9 @@
             // Chart.js implementation
             const ctx = document.getElementById('requirementsChart').getContext('2d');
             const requirementsData = {
-                // Approximate counts based on the detailed list
                 site: 3,
-                management: 8,
-                accounting: 2
+                management: 9,
+                accounting: 3 // Grouped into 3 main categories
             };
             const total = Object.values(requirementsData).reduce((a, b) => a + b, 0);
 
@@ -393,25 +362,25 @@
                         label: '功能需求數量',
                         data: [requirementsData.site, requirementsData.management, requirementsData.accounting],
                         backgroundColor: [
-                            'rgba(74, 144, 226, 0.8)', // Blue
-                            'rgba(80, 227, 194, 0.8)', // Teal
-                            'rgba(245, 166, 35, 0.8)'  // Orange
+                            'rgba(74, 144, 226, 0.8)',
+                            'rgba(80, 227, 194, 0.8)',
+                            'rgba(245, 166, 35, 0.8)'
                         ],
                         borderColor: [
-                            'rgba(74, 144, 226, 1)',
-                            'rgba(80, 227, 194, 1)',
-                            'rgba(245, 166, 35, 1)'
+                            '#FFFFFF'
                         ],
-                        borderWidth: 1
+                        borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    cutout: '60%',
                     plugins: {
                         legend: {
                             position: 'bottom',
                             labels: {
+                                padding: 20,
                                 font: {
                                     size: 14,
                                     family: "'Inter', 'Noto Sans TC', sans-serif"
@@ -426,7 +395,7 @@
                                         label += ': ';
                                     }
                                     if (context.parsed !== null) {
-                                        label += context.parsed + ' 項功能';
+                                        label += context.parsed + ' 項主要功能群';
                                     }
                                     return label;
                                 }
@@ -439,6 +408,4 @@
     </script>
 </body>
 </html>
-
-
 
