@@ -1,412 +1,644 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>納骨塔新資料庫系統建置與營運規劃</title>
+    <title>瑋志自製小工具</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Serene Professional -->
-    <!-- Application Structure Plan: The application uses a single-page dashboard with three main sections: '專案總覽' (Overview), '功能需求' (Requirements), and '挑戰與策略' (Challenges), accessible via a sticky top navigation. This structure effectively separates the project's strategic goals from its detailed technical specifications and risk analysis. The 'Requirements' section is further organized with department-specific tabs, allowing stakeholders to easily navigate to their area of interest. This information architecture is designed for maximum clarity and efficient communication during project planning and development. -->
-    <!-- Visualization & Content Choices: 
-        - Project Overview: High-level information is presented using dynamic stat cards. A project timeline, built with semantic HTML and styled with CSS, illustrates the phased implementation plan. A Chart.js donut chart provides a visual breakdown of functional complexity by department, highlighting where the most development effort is concentrated.
-        - Functional Requirements: A tabbed interface organizes a large number of detailed requirements. Each function is presented as a card with a Unicode icon for quick visual reference. Crucial technical specifications (e.g., file formats like .cdr/.btw, character set support) and user experience principles ('Single Window Operation') are explicitly stated.
-        - Challenges & Strategy: A two-column grid layout directly contrasts potential problems with proposed solutions. This format is highly effective for risk management and strategic planning, ensuring all stakeholders are aware of potential hurdles, including the critical need for '全字庫' font support.
-        - Interaction: User interaction is streamlined. Clicks on the main navigation switch the primary content view, while clicks on the department tabs update the detailed requirements display. This predictable, two-level navigation ensures the application is intuitive to use. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         body {
-            font-family: 'Inter', 'Noto Sans TC', sans-serif;
-            background-color: #F7F9FC;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
         }
-        .nav-link {
-            transition: all 0.3s ease;
-            border-bottom: 2px solid transparent;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
         }
-        .nav-link.active {
-            border-bottom-color: #4A90E2;
-            color: #2C3E50;
+        .tab-button {
+            padding: 0.75rem 1.5rem;
             font-weight: 600;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid transparent;
         }
-        .req-tab {
-            transition: all 0.3s ease;
+        .tab-button.active {
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border-color: #d1d5db;
         }
-        .req-tab.active {
-            background-color: #4A90E2;
-            color: white;
+        .tab-button:not(.active):hover {
+            background-color: #f3f4f6;
         }
-        .page-content {
+        .tab-content {
             display: none;
-            animation: fadeIn 0.5s ease-in-out;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .page-content.active {
+        .tab-content.active {
             display: block;
         }
-        .req-content {
-            display: none;
+        .tower-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 1.5rem;
         }
-        .req-content.active {
-            display: block;
+        .tower-item {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background-color: #ffffff;
+            font-weight: 500;
         }
-        .timeline-item {
-            position: relative;
-            padding-bottom: 2rem;
-            padding-left: 2.5rem;
+        .layer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
         }
-        .timeline-item:before {
-            content: '';
-            position: absolute;
-            left: 0.5rem;
-            top: 0.5rem;
-            width: 1px;
-            height: 100%;
-            background-color: #CBD5E1;
+        .layer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 6px;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+            font-size: 0.75rem;
+            transition: all 0.2s ease-in-out;
         }
-        .timeline-item:last-child:before {
-            display: none;
+        .layer-item.sold {
+            background-color: #fca5a5;
+            border-color: #f87171;
         }
-        .timeline-marker {
-            position: absolute;
-            left: 0;
-            top: 0.5rem;
-            width: 1rem;
-            height: 1rem;
-            border-radius: 50%;
-            background-color: #4A90E2;
-            border: 2px solid white;
-            box-shadow: 0 0 0 3px #F7F9FC;
+        .layer-item.unsold {
+            background-color: #a7f3d0;
+            border-color: #6ee7b7;
         }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 400px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px;
-            max-height: 400px;
+        .hidden {
+            display: none !important;
         }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 350px;
+        .filter-button {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .filter-button:hover {
+            background-color: #e5e7eb;
+        }
+        .filter-button.active {
+            background-color: #d1d5db;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0.7in;
+            }
+            body {
+                background-color: #fff;
+                color: #000;
+                margin: 0;
+                padding: 0;
+                overflow: visible !important;
+                display: block;
+            }
+            .container {
+                width: 100%;
+                padding: 0;
+                margin: 0;
+                max-width: none;
+            }
+            .no-print {
+                display: none !important;
+            }
+            #inventory-tab-content, #status-tab-content {
+                display: block !important;
+            }
+            #stats-tab-content {
+                display: none !important;
+            }
+            .tower-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 0.5rem;
+                width: 100%;
+            }
+            .tower-item {
+                box-shadow: none;
+                transform: none;
+                padding: 0.3rem;
+                font-size: 0.7rem;
+                border: 1px solid #d1d5db !important;
+                height: auto;
+                min-width: 100px;
+                page-break-inside: avoid;
+            }
+            .layer-list {
+                gap: 0.2rem;
+                margin-top: 0.4rem;
+            }
+            .layer-item {
+                font-size: 0.65rem;
+                padding: 0.2rem;
             }
         }
     </style>
 </head>
-<body class="text-gray-800">
-
-    <div class="min-h-screen bg-[#F7F9FC]">
-        <header class="bg-white shadow-sm sticky top-0 z-10">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="flex flex-col sm:flex-row justify-between items-center">
-                    <div>
-                        <h1 class="text-2xl font-bold text-[#2C3E50]">納骨塔新資料庫系統建置企劃</h1>
-                        <p class="text-sm text-gray-500">最終版功能需求與策略總覽</p>
-                    </div>
-                    <nav class="mt-4 sm:mt-0">
-                        <ul class="flex space-x-6">
-                            <li><a href="#" class="nav-link text-gray-600 hover:text-[#2C3E50] pb-1 active" data-target="overview">專案總覽</a></li>
-                            <li><a href="#" class="nav-link text-gray-600 hover:text-[#2C3E50] pb-1" data-target="requirements">功能需求</a></li>
-                            <li><a href="#" class="nav-link text-gray-600 hover:text-[#2C3E50] pb-1" data-target="challenges">挑戰與策略</a></li>
-                        </ul>
-                    </nav>
+<body>
+    <div class="container">
+        <header class="no-print text-center mb-4">
+            <h1 class="text-xl font-bold text-gray-800 mb-1">瑋志自製小工具</h1>
+            <p class="text-gray-600 text-sm">請上傳您的塔位資料 CSV 檔案以進行查詢。</p>
+            <div class="mt-4 flex flex-col items-center space-y-2">
+                <input type="file" id="csvFile" accept=".csv, .xls, .xlsx" class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100 transition duration-200
+                "/>
+                <div class="mt-2 flex items-center space-x-2">
+                    <label for="encodingSelect" class="text-sm font-semibold text-gray-700">編碼:</label>
+                    <select id="encodingSelect" class="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm text-gray-800">
+                        <option value="UTF-8">UTF-8</option>
+                        <option value="Big5" selected>Big5</option>
+                        <option value="windows-1252">Windows-1252</option>
+                    </select>
                 </div>
             </div>
+            <p id="file-error" class="mt-2 text-sm text-red-500 hidden">檔案讀取失敗，請確認檔案格式是否正確。</p>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <!-- 專案總覽 Section -->
-            <section id="overview" class="page-content active">
-                 <div class="text-center mb-10">
-                    <h2 class="text-3xl font-bold text-[#2C3E50] mb-2">專案核心目標與藍圖</h2>
-                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">本專案旨在建置一套整合性、高效率且具備未來擴充性的新資料庫系統，以取代停止更新的舊系統，並支援公司未來第二寶塔的興建與營運計畫。</p>
+        <div id="tabs-container" class="no-print mt-8 hidden">
+            <div class="flex justify-center mb-4 space-x-4">
+                <button id="inventory-tab" class="tab-button active">塔位銷售查詢</button>
+                <button id="status-tab" class="tab-button">塔位銷售狀態</button>
+                <button id="stats-tab" class="tab-button">銷售統計</button>
+            </div>
+            
+            <div id="inventory-tab-content" class="tab-content active p-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">塔位查詢</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="layerInput" class="block text-sm font-medium text-gray-700">樓層:</label>
+                        <input type="text" id="layerInput" placeholder="例如: 02" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    </div>
+                    <div>
+                        <label for="areaInput" class="block text-sm font-medium text-gray-700">區域:</label>
+                        <input type="text" id="areaInput" placeholder="例如: A" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    </div>
+                    <div>
+                        <label for="numberInput" class="block text-sm font-medium text-gray-700">號:</label>
+                        <input type="text" id="numberInput" placeholder="例如: 001" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    </div>
                 </div>
+                <div class="flex justify-center space-x-4 mt-6">
+                    <button id="searchButton" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-200">
+                        搜尋
+                    </button>
+                    <button onclick="window.print()" class="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-300 transition duration-200">
+                        列印
+                    </button>
+                </div>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-center">
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
-                        <p class="text-4xl font-bold text-[#4A90E2]">30+</p>
-                        <p class="text-gray-600 mt-2 font-semibold">年營運經驗</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
-                        <p class="text-4xl font-bold text-[#4A90E2]">3</p>
-                        <p class="text-gray-600 mt-2 font-semibold">大核心部門整合</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
-                        <p class="text-4xl font-bold text-[#4A90E2]">10</p>
-                        <p class="text-gray-600 mt-2 font-semibold">年長遠規模設計</p>
+            <div id="stats-tab-content" class="tab-content p-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">銷售統計</h2>
+                <p id="stats-instruction" class="text-gray-600 text-sm mb-4">請點擊下方樓層按鈕以顯示銷售統計資料，可複選。</p>
+                <div id="stats-buttons" class="flex flex-wrap gap-2 mb-4">
+                    <!-- Buttons will be generated here -->
+                </div>
+                <div id="statsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Statistics will be generated here -->
+                </div>
+                <div id="totalStats" class="mt-6 pt-4 border-t border-gray-200 hidden">
+                    <h3 class="text-base font-semibold text-gray-800 mb-2">總計:</h3>
+                    <div class="flex justify-between font-bold text-sm">
+                        <span class="text-red-500">已售總計: <span id="totalSold">0</span> 個</span>
+                        <span class="text-green-600">未售總計: <span id="totalUnsold">0</span> 個</span>
                     </div>
                 </div>
-                
-                <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                    <div class="lg:col-span-3 bg-white p-8 rounded-xl shadow-md border border-gray-200">
-                        <h3 class="text-2xl font-bold text-[#2C3E50] mb-6">專案推動時程規劃</h3>
-                        <div class="relative">
-                            <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <h4 class="font-bold text-lg text-[#2C3E50]">第一階段：核心系統建置</h4>
-                                <p class="text-gray-600">資料盤點、清理與移轉。完成銷售、塔位管理等核心功能模組的開發與上線。</p>
-                                <time class="text-sm text-gray-400">預計時程：6-8 個月</time>
-                            </div>
-                            <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <h4 class="font-bold text-lg text-[#2C3E50]">第二階段：財會與報表整合</h4>
-                                <p class="text-gray-600">整合電子發票系統，並完成所有財務、銷售及管理報表的開發與驗收。</p>
-                                <time class="text-sm text-gray-400">預計時程：3-4 個月</time>
-                            </div>
-                            <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <h4 class="font-bold text-lg text-[#2C3E50]">第三階段：跨園區管理擴充</h4>
-                                <p class="text-gray-600">建置多園區管理架構，為第二寶塔的營運預作準備，並完成跨園區報表功能。</p>
-                                <time class="text-sm text-gray-400">預計時程：4-6 個月</time>
-                            </div>
-                             <div class="timeline-item">
-                                <div class="timeline-marker"></div>
-                                <h4 class="font-bold text-lg text-[#2C3E50]">第四階段：系統全面上線</h4>
-                                <p class="text-gray-600">新舊系統完成交接，進行員工全面教育訓練，發布標準作業流程(SOP)。</p>
-                                <time class="text-sm text-gray-400">長期目標</time>
-                            </div>
-                        </div>
-                    </div>
-                     <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-md border border-gray-200">
-                        <h3 class="text-2xl font-bold text-[#2C3E50] mb-6 text-center">功能需求分佈</h3>
-                         <p class="text-gray-600 text-center mb-4">系統功能主要圍繞三大部門的核心業務流程，其中塔位管理與會計系統的功能最為全面與複雜。</p>
-                        <div class="chart-container">
-                            <canvas id="requirementsChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            </div>
 
-            <!-- 功能需求 Section -->
-            <section id="requirements" class="page-content">
-                <div class="text-center mb-10">
-                    <h2 class="text-3xl font-bold text-[#2C3E50] mb-2">系統功能需求詳情</h2>
-                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">本系統將整合三大部門的日常作業，旨在打造一個以客戶為中心、流程自動化的「單一窗口作業」平台，提升整體營運效率。</p>
+            <div id="status-tab-content" class="tab-content p-6 bg-white rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">塔位銷售狀態</h2>
+                <p id="status-instruction" class="text-gray-600 text-sm mb-4">請點擊下方按鈕以顯示塔位資料。</p>
+                <div id="status-buttons" class="flex flex-wrap gap-2 mb-4">
+                    <!-- Buttons will be generated here -->
                 </div>
-                
-                <div class="flex justify-center mb-8 bg-gray-200 rounded-full p-1 max-w-md mx-auto">
-                    <button class="req-tab w-full py-2 px-4 rounded-full text-gray-700 font-semibold active" data-target="req-site">寶塔現場</button>
-                    <button class="req-tab w-full py-2 px-4 rounded-full text-gray-700 font-semibold" data-target="req-management">塔位管理</button>
-                    <button class="req-tab w-full py-2 px-4 rounded-full text-gray-700 font-semibold" data-target="req-accounting">會計</button>
-                </div>
+            </div>
+        </div>
 
-                <div id="req-site" class="req-content active">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-lg shadow-sm border hover:border-blue-400 transition-colors">
-                            <h4 class="font-bold text-lg mb-2">🔍 即時塔位查詢</h4>
-                            <p class="text-gray-600">提供直覺介面，快速查詢塔位及牌位的售價、銷售狀態（已售、未售、保留）及詳細位置。</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border hover:border-blue-400 transition-colors">
-                            <h4 class="font-bold text-lg mb-2">🗺️ 視覺化銷售地圖</h4>
-                            <p class="text-gray-600">提供樓層平面圖，點擊即可查看塔位詳情與狀態，方便對客戶進行介紹與展示。</p>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border hover:border-blue-400 transition-colors">
-                            <h4 class="font-bold text-lg mb-2">📋 保留與取消管理</h4>
-                            <p class="text-gray-600">記錄客戶保留資訊，並能輸入經銷商與業務員資料，供後續追蹤及塔位管理模組直接利用。</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="req-management" class="req-content">
-                    <div class="bg-white p-8 rounded-lg shadow-sm border mb-6 bg-blue-50 border-blue-200">
-                        <h4 class="font-bold text-xl mb-2 text-[#4A90E2]">🌟 單一窗口作業核心</h4>
-                        <p class="text-gray-600">此為系統設計核心。在客戶資料介面，能一鍵連結至所有相關功能（如銷售、遷出、權狀作業），系統自動帶入資料，使用者僅需填寫關鍵資訊，大幅簡化流程。</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">📄 自動化文件生成</h4><p class="text-gray-600">根據客戶與塔位資料，自動生成制式化的權狀與定型化契約，減少人工錯誤。</p></div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">🔄 生命週期管理</h4><p class="text-gray-600">完整記錄塔位與牌位從銷售、使用、繳費到遷出的所有狀態與歷史紀錄。</p></div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">📥 使用與遷出管理</h4><p class="text-gray-600">標準化先人/牌位進塔與遷出的作業流程。進塔作業需能區分**撿骨、現往生、或從別的寶塔遷移**。</p></div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">↔️ 內部遷移管理</h4><p class="text-gray-600">支援塔位與牌位在寶塔內的遷移作業，並記錄完整的歷史軌跡。</p></div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">📜 權狀相關管理</h4><p class="text-gray-600">包含自動流水號、領取登記與狀態查詢，並支援作廢、補發、換發、過戶、繼承等複雜流程。</p></div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">✍️ 印鑑管理</h4><p class="text-gray-600">儲存權狀人印鑑資料供隨時調閱核對。一位權狀人不論擁有多少塔位，都只對應一枚印鑑。</p></div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2"> प्लेट 牌位內容查詢</h4><p class="text-gray-600">輸入編號即可查詢牌位正反面內容。需支援讀取正面 `.cdr` 與背面 `.btw` 檔案格式。</p></div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">📊 多元化報表產出</h4><p class="text-gray-600">產出各類管理報表，包含銷售使用率、遷出入紀錄、庫存、異動清單、及依權狀人地址統計的客戶分析報表。</p></div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border"><h4 class="font-bold text-lg mb-2">🌐 線上查詢即時同步</h4><p class="text-gray-600">系統資料異動時，自動同步更新至先人線上查詢網頁，無需人工轉檔上傳，確保資訊即時準確。</p></div>
-                    </div>
-                </div>
+        <div id="loading" class="no-print text-center text-gray-500 mt-8 hidden">
+            <div class="animate-spin inline-block w-8 h-8 border-[3px] border-current border-t-transparent text-blue-600 rounded-full" role="status">
+                <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+            </div>
+            <p class="mt-2">正在讀取檔案，請稍候...</p>
+        </div>
 
-                <div id="req-accounting" class="req-content">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-4 border-b pb-2 text-blue-600">⚙️ 系統新增方面</h4>
-                            <ul class="space-y-3 text-gray-700 list-disc list-inside">
-                                <li>直接列印契約書</li>
-                                <li>直接列印管理費收據</li>
-                                <li>導入電子發票系統</li>
-                                <li>依發票金額列印客戶購買價格證明（發票樣式表格）</li>
-                            </ul>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-4 border-b pb-2 text-blue-600">📈 報表方面</h4>
-                            <ul class="space-y-3 text-gray-700 list-disc list-inside">
-                                <li>管理費日常/急難支出(65%/35%)報表</li>
-                                <li>購買塔位牌位金額分別顯示（例：購二塔一牌）</li>
-                                <li>發票摘要明細表改以日期區間選擇</li>
-                            </ul>
-                        </div>
-                        <div class="bg-white p-6 rounded-lg shadow-sm border">
-                            <h4 class="font-bold text-lg mb-4 border-b pb-2 text-blue-600">🛠️ 目前需調整方面</h4>
-                            <ul class="space-y-3 text-gray-700 list-disc list-inside">
-                                <li>塔位依編號自動帶入公告價格</li>
-                                <li>發票查詢：點選查看資料時，原查詢視窗保留不關閉</li>
-                                <li>管理費以先人為單位，隨塔位調換移動，原塔位歸零</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 挑戰與策略 Section -->
-            <section id="challenges" class="page-content">
-                <div class="text-center mb-10">
-                    <h2 class="text-3xl font-bold text-[#2C3E50] mb-2">資料轉移挑戰與應對策略</h2>
-                    <p class="text-lg text-gray-600 max-w-3xl mx-auto">在系統轉換期間，我們預見了數個潛在挑戰。以下是針對各項挑戰提出的解決方案，以確保專案順利推動。</p>
-                </div>
-
-                <div class="space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 1：資料不一致與缺漏</h3><p class="text-gray-600">舊系統資料格式不統一，存在人為輸入錯誤、缺漏或未標準化的欄位，可能影響新系統的準確性。</p></div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">在移轉前進行大量的**資料盤點與清洗**，建立標準化範本，將錯誤資料修正後再匯入新系統。</p></div>
-                    </div>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 2：歷史資料的複雜性</h3><p class="text-gray-600">部分歷史權狀或契約可能包含特殊條款或非標準格式，無法自動轉移。</p></div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">對特殊案例進行**人工逐一審核**，並在系統中建立對應的處理機制或備註欄位。</p></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 3：特殊字體與字元支援</h3><p class="text-gray-600">舊系統使用「全字庫」來顯示難字。新系統必須能夠支援並正確顯示這些字體，避免資料遺失或亂碼。</p></div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">與開發商確認新系統的資料庫編碼與前端字體支援，確保能**完整相容「全字庫」字元集**。</p></div>
-                    </div>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 4：平行測試期間的混亂</h3><p class="text-gray-600">新舊系統並行期間，容易造成資料同步問題，並增加員工操作的複雜性與出錯風險。</p></div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">規劃明確的**平行測試期 (3-6個月)**，定義清楚的資料輸入規則，並加強員工訓練，確保過渡期平穩。</p></div>
-                    </div>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start bg-white p-6 rounded-lg shadow-sm border">
-                        <div><h3 class="text-xl font-bold text-red-600 mb-2">挑戰 5：資安與備份風險</h3><p class="text-gray-600">大量客戶與財務資料在移轉過程中，若缺乏完善的加密與備份機制，將面臨外洩或遺失的風險。</p></div>
-                        <div class="bg-green-50 p-4 rounded-md border border-green-200"><h3 class="text-xl font-bold text-green-700 mb-2">✅ 解決建議</h3><p class="text-gray-700">建立**每日異地備份**與**雲端備援**機制，並對敏感資料進行加密處理，確保資料安全無虞。</p></div>
-                    </div>
-                </div>
-            </section>
-        </main>
-        
-        <footer class="text-center py-6 mt-8 border-t">
-            <p class="text-gray-500 text-sm">&copy; 2025 高雄觀音山金寶塔新資料庫系統建置移轉. All Rights Reserved.</p>
-        </footer>
+        <div id="towerList" class="tower-grid mt-8">
+            <!-- Content for tower list will be rendered here -->
+        </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const navLinks = document.querySelectorAll('.nav-link');
-            const pages = document.querySelectorAll('.page-content');
-            const reqTabs = document.querySelectorAll('.req-tab');
-            const reqContents = document.querySelectorAll('.req-content');
+        document.addEventListener('DOMContentLoaded', () => {
+            const towerListContainer = document.getElementById('towerList');
+            const csvFileInput = document.getElementById('csvFile');
+            const encodingSelect = document.getElementById('encodingSelect');
+            const loadingIndicator = document.getElementById('loading');
+            const fileError = document.getElementById('file-error');
+            const tabsContainer = document.getElementById('tabs-container');
+            const statsList = document.getElementById('statsList');
+            const searchButton = document.getElementById('searchButton');
+            const layerInput = document.getElementById('layerInput');
+            const areaInput = document.getElementById('areaInput');
+            const numberInput = document.getElementById('numberInput');
+            
+            const inventoryTabBtn = document.getElementById('inventory-tab');
+            const statusTabBtn = document.getElementById('status-tab');
+            const statsTabBtn = document.getElementById('stats-tab');
+            const inventoryTabContent = document.getElementById('inventory-tab-content');
+            const statusTabContent = document.getElementById('status-tab-content');
+            const statsTabContent = document.getElementById('stats-tab-content');
+            const statusButtonsContainer = document.getElementById('status-buttons');
+            const statsButtonsContainer = document.getElementById('stats-buttons');
+            const totalStatsContainer = document.getElementById('totalStats');
+            const totalSoldSpan = document.getElementById('totalSold');
+            const totalUnsoldSpan = document.getElementById('totalUnsold');
+            
+            let allTowerData = {};
 
-            function switchPage(targetId) {
-                pages.forEach(page => {
-                    page.classList.toggle('active', page.id === targetId);
-                });
-                navLinks.forEach(link => {
-                    link.classList.toggle('active', link.dataset.target === targetId);
-                });
-                window.scrollTo(0, 0);
-            }
+            const switchTab = (tabName) => {
+                // Remove active class from all buttons and content
+                inventoryTabBtn.classList.remove('active');
+                statusTabBtn.classList.remove('active');
+                statsTabBtn.classList.remove('active');
+                inventoryTabContent.classList.remove('active');
+                statusTabContent.classList.remove('active');
+                statsTabContent.classList.remove('active');
+                
+                // Clear the tower list and stats list when switching tabs
+                towerListContainer.innerHTML = '';
+                statsList.innerHTML = '';
+                totalStatsContainer.classList.add('hidden');
 
-            function switchReqTab(targetId) {
-                reqContents.forEach(content => {
-                    content.classList.toggle('active', content.id === targetId);
-                });
-                reqTabs.forEach(tab => {
-                    tab.classList.toggle('active', tab.dataset.target === targetId);
-                });
-            }
-
-            navLinks.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const targetId = e.currentTarget.dataset.target;
-                    switchPage(targetId);
-                });
-            });
-
-            reqTabs.forEach(tab => {
-                tab.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const targetId = e.currentTarget.dataset.target;
-                    switchReqTab(targetId);
-                });
-            });
-
-            // Chart.js implementation
-            const ctx = document.getElementById('requirementsChart').getContext('2d');
-            const requirementsData = {
-                site: 3,
-                management: 9,
-                accounting: 3 // Grouped into 3 main categories
+                // Add active class to the selected tab and its content
+                if (tabName === 'inventory') {
+                    inventoryTabBtn.classList.add('active');
+                    inventoryTabContent.classList.add('active');
+                } else if (tabName === 'status') {
+                    statusTabBtn.classList.add('active');
+                    statusTabContent.classList.add('active');
+                    // Reset button active state when switching to this tab
+                    document.querySelectorAll('#status-buttons .filter-button').forEach(btn => btn.classList.remove('active'));
+                } else { // stats tab
+                    statsTabBtn.classList.add('active');
+                    statsTabContent.classList.add('active');
+                     // Reset button active state when switching to this tab
+                    document.querySelectorAll('#stats-buttons .filter-button').forEach(btn => btn.classList.remove('active'));
+                }
             };
-            const total = Object.values(requirementsData).reduce((a, b) => a + b, 0);
 
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: [
-                        `寶塔現場 (${Math.round(requirementsData.site/total*100)}%)`, 
-                        `塔位管理 (${Math.round(requirementsData.management/total*100)}%)`, 
-                        `會計 (${Math.round(requirementsData.accounting/total*100)}%)`
-                    ],
-                    datasets: [{
-                        label: '功能需求數量',
-                        data: [requirementsData.site, requirementsData.management, requirementsData.accounting],
-                        backgroundColor: [
-                            'rgba(74, 144, 226, 0.8)',
-                            'rgba(80, 227, 194, 0.8)',
-                            'rgba(245, 166, 35, 0.8)'
-                        ],
-                        borderColor: [
-                            '#FFFFFF'
-                        ],
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '60%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                font: {
-                                    size: 14,
-                                    family: "'Inter', 'Noto Sans TC', sans-serif"
-                                }
+            inventoryTabBtn.addEventListener('click', () => switchTab('inventory'));
+            statusTabBtn.addEventListener('click', () => switchTab('status'));
+            statsTabBtn.addEventListener('click', () => switchTab('stats'));
+
+            const generateStats = (selectedLayers = []) => {
+                statsList.innerHTML = '';
+                totalStatsContainer.classList.add('hidden');
+                let totalSold = 0;
+                let totalUnsold = 0;
+
+                if (selectedLayers.length === 0) {
+                     statsList.innerHTML = '<p class="text-center text-gray-500">請點擊上方按鈕以顯示統計資料。</p>';
+                     return;
+                }
+
+                const stats = {};
+                selectedLayers.forEach(layer => {
+                    if (allTowerData[layer]) {
+                        if (!stats[layer]) {
+                            stats[layer] = {};
+                        }
+                        for (const area in allTowerData[layer]) {
+                            if (!stats[layer][area]) {
+                                stats[layer][area] = { sold: 0, unsold: 0 };
                             }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.label || '';
-                                    if (label) {
-                                        label += ': ';
+                            
+                            for (const number in allTowerData[layer][area]) {
+                                for (const tier in allTowerData[layer][area][number]) {
+                                    const salesStatus = allTowerData[layer][area][number][tier];
+                                    if (salesStatus === '已售') {
+                                        stats[layer][area].sold++;
+                                        totalSold++;
+                                    } else {
+                                        stats[layer][area].unsold++;
+                                        totalUnsold++;
                                     }
-                                    if (context.parsed !== null) {
-                                        label += context.parsed + ' 項主要功能群';
-                                    }
-                                    return label;
                                 }
                             }
                         }
                     }
+                });
+                
+                renderStats(stats, totalSold, totalUnsold);
+            };
+
+            const renderStats = (stats, totalSold, totalUnsold) => {
+                statsList.innerHTML = '';
+                const sortedLayers = Object.keys(stats).sort();
+
+                if (sortedLayers.length === 0) {
+                    statsList.innerHTML = '<p class="text-center text-gray-500">沒有找到任何統計資料。</p>';
+                    return;
+                }
+
+                sortedLayers.forEach(layer => {
+                    const sortedAreas = Object.keys(stats[layer]).sort();
+                    sortedAreas.forEach(area => {
+                        const stat = stats[layer][area];
+                        const statItem = document.createElement('div');
+                        statItem.className = 'p-4 rounded-lg bg-gray-50 border border-gray-200';
+                        statItem.innerHTML = `
+                            <h3 class="font-bold text-gray-800 text-sm mb-1">樓層: ${layer}, 區域: ${area}</h3>
+                            <p class="text-xs text-red-500 font-semibold">已售: ${stat.sold} 個</p>
+                            <p class="text-xs text-green-600 font-semibold">未售: ${stat.unsold} 個</p>
+                        `;
+                        statsList.appendChild(statItem);
+                    });
+                });
+
+                // Update total stats and show the container
+                totalSoldSpan.textContent = totalSold;
+                totalUnsoldSpan.textContent = totalUnsold;
+                totalStatsContainer.classList.remove('hidden');
+            };
+
+            const renderTowerList = (groupedData) => {
+                towerListContainer.innerHTML = '';
+                if (Object.keys(groupedData).length === 0) {
+                    towerListContainer.innerHTML = '<p class="text-center text-gray-500 mt-8">沒有找到相關的塔位資料。</p>';
+                    return;
+                }
+
+                const sortedTowerIds = Object.keys(groupedData).sort();
+
+                sortedTowerIds.forEach(towerId => {
+                    const towerItemDiv = document.createElement('div');
+                    towerItemDiv.className = `tower-item rounded-lg shadow-sm`;
+                    
+                    const layerListDiv = document.createElement('div');
+                    layerListDiv.className = `layer-list`;
+                    
+                    const sortedTiers = Object.keys(groupedData[towerId]).sort((a, b) => {
+                        return parseInt(a, 10) - parseInt(b, 10);
+                    });
+
+                    sortedTiers.forEach(tier => {
+                        const salesStatus = groupedData[towerId][tier];
+                        const layerItemDiv = document.createElement('div');
+                        layerItemDiv.className = `layer-item ${salesStatus === '已售' ? 'sold' : 'unsold'}`;
+                        layerItemDiv.innerHTML = `
+                            <span class="font-bold">${tier}層</span>
+                            <span class="status">${salesStatus}</span>
+                        `;
+                        layerListDiv.appendChild(layerItemDiv);
+                    });
+
+                    towerItemDiv.innerHTML = `
+                        <h3 class="font-bold text-base text-gray-800 text-center">${towerId}</h3>
+                    `;
+                    towerItemDiv.appendChild(layerListDiv);
+                    towerListContainer.appendChild(towerItemDiv);
+                });
+            };
+
+            const createStatusButtons = () => {
+                statusButtonsContainer.innerHTML = '';
+                const allButton = document.createElement('button');
+                allButton.textContent = '全部顯示';
+                allButton.className = 'filter-button';
+                allButton.addEventListener('click', () => {
+                    renderAllTowers();
+                    document.querySelectorAll('#status-buttons .filter-button').forEach(btn => btn.classList.remove('active'));
+                    allButton.classList.add('active');
+                });
+                statusButtonsContainer.appendChild(allButton);
+
+                const sortedLayers = Object.keys(allTowerData).sort();
+                sortedLayers.forEach(layer => {
+                    const layerButton = document.createElement('button');
+                    layerButton.textContent = `樓層 ${layer}`;
+                    layerButton.className = 'filter-button';
+                    layerButton.addEventListener('click', () => {
+                        renderTowersByLayer(layer);
+                        document.querySelectorAll('#status-buttons .filter-button').forEach(btn => btn.classList.remove('active'));
+                        layerButton.classList.add('active');
+                    });
+                    statusButtonsContainer.appendChild(layerButton);
+                });
+            };
+
+            const createStatsButtons = () => {
+                statsButtonsContainer.innerHTML = '';
+                const sortedLayers = Object.keys(allTowerData).sort();
+                
+                // Create individual layer buttons first
+                sortedLayers.forEach(layer => {
+                    const layerButton = document.createElement('button');
+                    layerButton.textContent = `樓層 ${layer}`;
+                    layerButton.className = 'filter-button';
+                    layerButton.dataset.layer = layer;
+                    layerButton.addEventListener('click', () => {
+                        layerButton.classList.toggle('active');
+                        // Deactivate "全部顯示" button if any layer button is clicked
+                        const allStatsButton = document.getElementById('allStatsButton');
+                        if (allStatsButton) {
+                            allStatsButton.classList.remove('active');
+                        }
+                        const activeLayerButtons = document.querySelectorAll('#stats-buttons .filter-button.active[data-layer]');
+                        const selectedLayers = Array.from(activeLayerButtons).map(btn => btn.dataset.layer);
+                        generateStats(selectedLayers);
+                    });
+                    statsButtonsContainer.appendChild(layerButton);
+                });
+                
+                // Create "Show All" button at the end
+                const allButton = document.createElement('button');
+                allButton.textContent = '全部顯示';
+                allButton.className = 'filter-button';
+                allButton.id = 'allStatsButton';
+                allButton.addEventListener('click', () => {
+                    const isNowActive = allButton.classList.toggle('active');
+                    const layerButtons = document.querySelectorAll('#stats-buttons .filter-button[data-layer]');
+                    
+                    if (isNowActive) {
+                        // Activate all layer buttons and generate stats for all layers
+                        layerButtons.forEach(btn => btn.classList.add('active'));
+                        const selectedLayers = Object.keys(allTowerData).sort();
+                        generateStats(selectedLayers);
+                    } else {
+                        // Deactivate all layer buttons and clear stats
+                        layerButtons.forEach(btn => btn.classList.remove('active'));
+                        generateStats([]); // Pass an empty array
+                    }
+                });
+                statsButtonsContainer.appendChild(allButton);
+            };
+
+            const renderAllTowers = () => {
+                const allData = {};
+                for (const layer in allTowerData) {
+                    for (const area in allTowerData[layer]) {
+                        for (const number in allTowerData[layer][area]) {
+                            const towerId = `${layer}-${area}-${number}`;
+                            allData[towerId] = allTowerData[layer][area][number];
+                        }
+                    }
+                }
+                renderTowerList(allData);
+            };
+
+            const renderTowersByLayer = (selectedLayer) => {
+                const filteredData = {};
+                for (const layer in allTowerData) {
+                    if (layer === selectedLayer) {
+                        for (const area in allTowerData[layer]) {
+                            for (const number in allTowerData[layer][area]) {
+                                const towerId = `${layer}-${area}-${number}`;
+                                filteredData[towerId] = allTowerData[layer][area][number];
+                            }
+                        }
+                    }
+                }
+                renderTowerList(filteredData);
+            };
+
+            const parseFile = (file) => {
+                loadingIndicator.classList.remove('hidden');
+                towerListContainer.innerHTML = '';
+                fileError.classList.add('hidden');
+                tabsContainer.classList.add('hidden');
+                statusButtonsContainer.innerHTML = ''; // Clear buttons on new file load
+                statsButtonsContainer.innerHTML = '';
+                statsList.innerHTML = '';
+                totalStatsContainer.classList.add('hidden');
+
+                const selectedEncoding = encodingSelect.value;
+                
+                Papa.parse(file, {
+                    header: false,
+                    skipEmptyLines: true,
+                    encoding: selectedEncoding,
+                    complete: function(results) {
+                        loadingIndicator.classList.add('hidden');
+                        if (results.data && results.data.length > 5) {
+                            allTowerData = {};
+                            const dataLines = results.data.slice(5);
+                            
+                            dataLines.forEach(row => {
+                                // 塔位編號在欄位 B (索引 1)
+                                const fullTowerId = row[1] ? row[1].trim() : '';
+                                if (!fullTowerId) return;
+
+                                const parts = fullTowerId.split('-');
+                                if (parts.length < 4) return;
+                                
+                                const layer = parts[0].trim();
+                                const area = parts[1].trim();
+                                const number = parts[2].trim();
+                                // 樓層號碼位於分割後的最後一個元素
+                                const tier = parts[parts.length - 1].trim(); 
+                                
+                                // 銷售別在欄位 C (索引 2)
+                                const salesStatus = row[2] ? row[2].trim() : '';
+
+                                if (!allTowerData[layer]) {
+                                    allTowerData[layer] = {};
+                                }
+                                if (!allTowerData[layer][area]) {
+                                    allTowerData[layer][area] = {};
+                                }
+                                if (!allTowerData[layer][area][number]) {
+                                    allTowerData[layer][area][number] = {};
+                                }
+                                
+                                allTowerData[layer][area][number][tier] = salesStatus;
+                            });
+
+                            tabsContainer.classList.remove('hidden');
+                            createStatusButtons();
+                            createStatsButtons();
+                            switchTab('inventory');
+                        } else {
+                            fileError.classList.remove('hidden');
+                            towerListContainer.innerHTML = `<p class="text-center text-red-500 mt-8">檔案讀取失敗，請確認檔案格式是否正確。</p>`;
+                        }
+                    },
+                    error: function(error) {
+                        loadingIndicator.classList.add('hidden');
+                        console.error('Error parsing CSV:', error);
+                        fileError.classList.remove('hidden');
+                        towerListContainer.innerHTML = `<p class="text-center text-red-500 mt-8">檔案讀取失敗，請確認檔案格式是否正確。</p>`;
+                    }
+                });
+            };
+
+            const performSearch = () => {
+                const searchLayer = layerInput.value.trim();
+                const searchArea = areaInput.value.trim().toUpperCase();
+                const searchNumber = numberInput.value.trim();
+                
+                const filteredData = {};
+                
+                if (!searchLayer && !searchArea && !searchNumber) {
+                    towerListContainer.innerHTML = '<p class="text-center text-gray-500 mt-8">請至少輸入一個查詢條件。</p>';
+                    return;
+                }
+
+                for (const layer in allTowerData) {
+                    if (searchLayer && layer !== searchLayer) continue;
+                    
+                    for (const area in allTowerData[layer]) {
+                        if (searchArea && area !== searchArea) continue;
+
+                        for (const number in allTowerData[layer][area]) {
+                            if (searchNumber && number !== searchNumber) continue;
+                            
+                            const towerId = `${layer}-${area}-${number}`;
+                            filteredData[towerId] = allTowerData[layer][area][number];
+                        }
+                    }
+                }
+                
+                renderTowerList(filteredData);
+            };
+
+            csvFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                parseFile(file);
+            });
+            
+            encodingSelect.addEventListener('change', () => {
+                const file = csvFileInput.files[0];
+                if (file) {
+                    parseFile(file);
                 }
             });
+
+            searchButton.addEventListener('click', performSearch);
         });
     </script>
 </body>
 </html>
-
-
