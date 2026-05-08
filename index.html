@@ -3,642 +3,590 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>瑋志自製小工具</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>神主牌位排字工具</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f3f4f6;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-        .tab-button {
-            padding: 0.75rem 1.5rem;
-            font-weight: 600;
-            border-radius: 9999px;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            border: 1px solid transparent;
-        }
-        .tab-button.active {
-            background-color: #e5e7eb;
-            color: #1f2937;
-            border-color: #d1d5db;
-        }
-        .tab-button:not(.active):hover {
-            background-color: #f3f4f6;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .tower-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 1.5rem;
-        }
-        .tower-item {
-            display: flex;
-            flex-direction: column;
-            padding: 1rem;
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            background-color: #ffffff;
-            font-weight: 500;
-        }
-        .layer-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        .layer-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-radius: 6px;
-            padding: 0.5rem;
-            border: 1px solid #e5e7eb;
-            text-align: left;
-            font-size: 0.75rem;
-            transition: all 0.2s ease-in-out;
-        }
-        .layer-item.sold {
-            background-color: #fca5a5;
-            border-color: #f87171;
-        }
-        .layer-item.unsold {
-            background-color: #a7f3d0;
-            border-color: #6ee7b7;
-        }
-        .hidden {
-            display: none !important;
-        }
-        .filter-button {
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-weight: 500;
-            background-color: #f3f4f6;
-            border: 1px solid #d1d5db;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-        }
-        .filter-button:hover {
-            background-color: #e5e7eb;
-        }
-        .filter-button.active {
-            background-color: #d1d5db;
+        :root {
+            --wood-bg: linear-gradient(135deg, #d2a679 0%, #b37746 100%);
+            --wood-border: #6b4423;
+            --inner-bg: #cc0000;
+            --text-dark: #222;
+            --text-light: #f5f5f5;
         }
 
-        @media print {
-            @page {
-                size: A4 portrait;
-                margin: 0.7in;
-            }
-            body {
-                background-color: #fff;
-                color: #000;
-                margin: 0;
-                padding: 0;
-                overflow: visible !important;
-                display: block;
-            }
-            .container {
-                width: 100%;
-                padding: 0;
-                margin: 0;
-                max-width: none;
-            }
-            .no-print {
-                display: none !important;
-            }
-            #inventory-tab-content, #status-tab-content {
-                display: block !important;
-            }
-            #stats-tab-content {
-                display: none !important;
-            }
-            .tower-grid {
-                grid-template-columns: repeat(5, 1fr);
-                gap: 0.5rem;
-                width: 100%;
-            }
-            .tower-item {
-                box-shadow: none;
-                transform: none;
-                padding: 0.3rem;
-                font-size: 0.7rem;
-                border: 1px solid #d1d5db !important;
-                height: auto;
-                min-width: 100px;
-                page-break-inside: avoid;
-            }
-            .layer-list {
-                gap: 0.2rem;
-                margin-top: 0.4rem;
-            }
-            .layer-item {
-                font-size: 0.65rem;
-                padding: 0.2rem;
-            }
+        body {
+            font-family: "BiauKai", "DFKai-SB", "Kaiti", "標楷體", serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0ece1;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* 左側設定區 */
+        .settings-panel {
+            flex: 1;
+            min-width: 350px;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        h2 {
+            border-bottom: 2px solid #b37746;
+            padding-bottom: 10px;
+            color: #6b4423;
+            font-size: 1.4rem;
+            margin-top: 0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.95rem;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .fortune-tag {
+            font-size: 0.85rem;
+            color: #d32f2f;
+            margin-left: 10px;
+            font-weight: normal;
+        }
+
+        .inner-person-block {
+            background: #fafafa;
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #cc0000;
+        }
+
+        /* 右側預覽區 */
+        .preview-panel {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #ddd;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            font-size: 1rem;
+            font-family: inherit;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .tab-btn.active {
+            background: #b37746;
+            color: #fff;
+        }
+
+        .preview-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 0 10px 10px 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: none;
+            justify-content: center;
+            min-height: 600px;
+        }
+
+        .preview-content.active {
+            display: flex;
+        }
+
+        /* 牌位視覺共用 */
+        .tablet {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            padding: 30px 20px;
+            box-shadow: 3px 6px 15px rgba(0,0,0,0.4);
+            margin: 0 auto;
+        }
+
+        /* 外牌樣式 */
+        .outer-tablet {
+            width: 260px;
+            height: 550px;
+            background: var(--wood-bg);
+            border: 8px solid var(--wood-border);
+            border-radius: 20px 20px 0 0;
+            color: var(--text-dark);
+            position: relative;
+            display: flex;
+            align-items: center;
+            outline: 2px solid rgba(0,0,0,0.3) inset;
+            box-shadow: 5px 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .tanghao {
+            writing-mode: horizontal-tb;
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+            width: 100%;
+        }
+
+        .tablet-body {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            height: 100%;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .col-right, .col-left {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            padding-top: 50px;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+
+        .col-middle {
+            font-size: 1.7rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-align: center;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+
+        /* 內牌樣式 */
+        .inner-tablet {
+            width: 260px;
+            height: 550px;
+            background: var(--inner-bg);
+            border-radius: 10px;
+            color: #000;
+            padding: 30px 15px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 3px 6px 15px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+        }
+
+        .inner-person-col {
+            display: flex;
+            justify-content: space-between;
+            height: 100%;
+            border-right: 1px dashed rgba(0,0,0,0.2);
+            padding-right: 15px;
+        }
+        .inner-person-col:first-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .inner-side {
+            font-size: 0.95rem;
+            padding-top: 30px;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+        
+        .inner-main {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 0 5px;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+        }
+
+        /* 純文字輸出區 */
+        #text-output {
+            width: 100%;
+            height: 500px;
+            padding: 20px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: "Courier New", "標楷體", monospace;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .btn-copy {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            width: 100%;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: #45a049;
+        }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .settings-panel { max-height: none; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="no-print text-center mb-4">
-            <h1 class="text-xl font-bold text-gray-800 mb-1">瑋志自製小工具</h1>
-            <p class="text-gray-600 text-sm">請上傳您的塔位資料 CSV 檔案以進行查詢。</p>
-            <div class="mt-4 flex flex-col items-center space-y-2">
-                <input type="file" id="csvFile" accept=".csv, .xls, .xlsx" class="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-blue-50 file:text-blue-700
-                    hover:file:bg-blue-100 transition duration-200
-                "/>
-                <div class="mt-2 flex items-center space-x-2">
-                    <label for="encodingSelect" class="text-sm font-semibold text-gray-700">編碼:</label>
-                    <select id="encodingSelect" class="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm text-gray-800">
-                        <option value="UTF-8">UTF-8</option>
-                        <option value="Big5" selected>Big5</option>
-                        <option value="windows-1252">Windows-1252</option>
-                    </select>
-                </div>
-            </div>
-            <p id="file-error" class="mt-2 text-sm text-red-500 hidden">檔案讀取失敗，請確認檔案格式是否正確。</p>
-        </header>
 
-        <div id="tabs-container" class="no-print mt-8 hidden">
-            <div class="flex justify-center mb-4 space-x-4">
-                <button id="inventory-tab" class="tab-button active">塔位銷售查詢</button>
-                <button id="status-tab" class="tab-button">塔位銷售狀態</button>
-                <button id="stats-tab" class="tab-button">銷售統計</button>
+<div class="container">
+    <div class="settings-panel">
+        <h2>管理資訊</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label>牌位編號</label>
+                <input type="text" id="tabletId" value="1F-01-03">
             </div>
-            
-            <div id="inventory-tab-content" class="tab-content active p-6 bg-white rounded-lg shadow-md">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">塔位查詢</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label for="layerInput" class="block text-sm font-medium text-gray-700">樓層:</label>
-                        <input type="text" id="layerInput" placeholder="例如: 02" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    </div>
-                    <div>
-                        <label for="areaInput" class="block text-sm font-medium text-gray-700">區域:</label>
-                        <input type="text" id="areaInput" placeholder="例如: A" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    </div>
-                    <div>
-                        <label for="numberInput" class="block text-sm font-medium text-gray-700">號:</label>
-                        <input type="text" id="numberInput" placeholder="例如: 001" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                    </div>
-                </div>
-                <div class="flex justify-center space-x-4 mt-6">
-                    <button id="searchButton" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-200">
-                        搜尋
-                    </button>
-                    <button onclick="window.print()" class="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-300 transition duration-200">
-                        列印
-                    </button>
-                </div>
-            </div>
-
-            <div id="stats-tab-content" class="tab-content p-6 bg-white rounded-lg shadow-md">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">銷售統計</h2>
-                <p id="stats-instruction" class="text-gray-600 text-sm mb-4">請點擊下方樓層按鈕以顯示銷售統計資料，可複選。</p>
-                <div id="stats-buttons" class="flex flex-wrap gap-2 mb-4">
-                    <!-- Buttons will be generated here -->
-                </div>
-                <div id="statsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Statistics will be generated here -->
-                </div>
-                <div id="totalStats" class="mt-6 pt-4 border-t border-gray-200 hidden">
-                    <h3 class="text-base font-semibold text-gray-800 mb-2">總計:</h3>
-                    <div class="flex justify-between font-bold text-sm">
-                        <span class="text-red-500">已售總計: <span id="totalSold">0</span> 個</span>
-                        <span class="text-green-600">未售總計: <span id="totalUnsold">0</span> 個</span>
-                    </div>
-                </div>
-            </div>
-
-            <div id="status-tab-content" class="tab-content p-6 bg-white rounded-lg shadow-md">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">塔位銷售狀態</h2>
-                <p id="status-instruction" class="text-gray-600 text-sm mb-4">請點擊下方按鈕以顯示塔位資料。</p>
-                <div id="status-buttons" class="flex flex-wrap gap-2 mb-4">
-                    <!-- Buttons will be generated here -->
-                </div>
+            <div class="form-group">
+                <label>入牌日期</label>
+                <input type="text" id="entryDate" value="115.05.30">
             </div>
         </div>
 
-        <div id="loading" class="no-print text-center text-gray-500 mt-8 hidden">
-            <div class="animate-spin inline-block w-8 h-8 border-[3px] border-current border-t-transparent text-blue-600 rounded-full" role="status">
-                <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+        <h2>外牌設定</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label>牌位類型</label>
+                <select id="outerType">
+                    <option value="ancestor">歷代祖先牌位</option>
+                    <option value="male">個人牌位(男)</option>
+                    <option value="female">個人牌位(女)</option>
+                </select>
             </div>
-            <p class="mt-2">正在讀取檔案，請稍候...</p>
+            <div class="form-group">
+                <label>姓氏</label>
+                <input type="text" id="surname" value="陳">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>堂號 (橫批) <span class="fortune-tag" id="ft-tanghao"></span></label>
+            <input type="text" id="tanghao" value="穎　川">
+            <small style="color:#777;">*視覺預覽將自動左右置換顯示</small>
+        </div>
+        <div class="form-group">
+            <label>外牌主文 (中行) <span class="fortune-tag" id="ft-outermiddle"></span></label>
+            <input type="text" id="outerMiddle" value="堂上陳姓歷代祖考妣之神位">
+            <small style="color:#777;">*切換類型或姓氏時會自動產生</small>
+        </div>
+        <div class="form-group">
+            <label>年份 (右行) <span class="fortune-tag" id="ft-year"></span></label>
+            <input type="text" id="year" value="歲次甲辰年立">
+        </div>
+        <div class="form-group">
+            <label>奉祀人 (左行) <span class="fortune-tag" id="ft-worship"></span></label>
+            <input type="text" id="worship" value="陽上子孫奉祀">
         </div>
 
-        <div id="towerList" class="tower-grid mt-8">
-            <!-- Content for tower list will be rendered here -->
+        <h2 style="margin-top:30px;">內牌設定</h2>
+        <div class="form-group">
+            <label>內牌形式</label>
+            <select id="innerType">
+                <option value="single">個人</option>
+                <option value="couple">夫妻</option>
+                <option value="trio">三人</option>
+            </select>
         </div>
+        
+        <div id="inner-forms-container">
+            </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const towerListContainer = document.getElementById('towerList');
-            const csvFileInput = document.getElementById('csvFile');
-            const encodingSelect = document.getElementById('encodingSelect');
-            const loadingIndicator = document.getElementById('loading');
-            const fileError = document.getElementById('file-error');
-            const tabsContainer = document.getElementById('tabs-container');
-            const statsList = document.getElementById('statsList');
-            const searchButton = document.getElementById('searchButton');
-            const layerInput = document.getElementById('layerInput');
-            const areaInput = document.getElementById('areaInput');
-            const numberInput = document.getElementById('numberInput');
-            
-            const inventoryTabBtn = document.getElementById('inventory-tab');
-            const statusTabBtn = document.getElementById('status-tab');
-            const statsTabBtn = document.getElementById('stats-tab');
-            const inventoryTabContent = document.getElementById('inventory-tab-content');
-            const statusTabContent = document.getElementById('status-tab-content');
-            const statsTabContent = document.getElementById('stats-tab-content');
-            const statusButtonsContainer = document.getElementById('status-buttons');
-            const statsButtonsContainer = document.getElementById('stats-buttons');
-            const totalStatsContainer = document.getElementById('totalStats');
-            const totalSoldSpan = document.getElementById('totalSold');
-            const totalUnsoldSpan = document.getElementById('totalUnsold');
-            
-            let allTowerData = {};
+    <div class="preview-panel">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tab-outer')">外牌視覺</button>
+            <button class="tab-btn" onclick="switchTab('tab-inner')">內牌視覺</button>
+            <button class="tab-btn" onclick="switchTab('tab-text')">純文字輸出</button>
+        </div>
 
-            const switchTab = (tabName) => {
-                // Remove active class from all buttons and content
-                inventoryTabBtn.classList.remove('active');
-                statusTabBtn.classList.remove('active');
-                statsTabBtn.classList.remove('active');
-                inventoryTabContent.classList.remove('active');
-                statusTabContent.classList.remove('active');
-                statsTabContent.classList.remove('active');
-                
-                // Clear the tower list and stats list when switching tabs
-                towerListContainer.innerHTML = '';
-                statsList.innerHTML = '';
-                totalStatsContainer.classList.add('hidden');
+        <div id="tab-outer" class="preview-content active">
+            <div class="outer-tablet">
+                <div style="width:100%; display:flex; flex-direction:column; align-items:center;">
+                    <div class="tanghao" id="prev-tanghao">川穎</div>
+                    <div class="tablet-body">
+                        <div class="col-right" id="prev-year">歲次甲辰年立</div>
+                        <div class="col-middle" id="prev-outermiddle">堂上陳姓歷代祖考妣之神位</div>
+                        <div class="col-left" id="prev-worship">陽上子孫奉祀</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                // Add active class to the selected tab and its content
-                if (tabName === 'inventory') {
-                    inventoryTabBtn.classList.add('active');
-                    inventoryTabContent.classList.add('active');
-                } else if (tabName === 'status') {
-                    statusTabBtn.classList.add('active');
-                    statusTabContent.classList.add('active');
-                    // Reset button active state when switching to this tab
-                    document.querySelectorAll('#status-buttons .filter-button').forEach(btn => btn.classList.remove('active'));
-                } else { // stats tab
-                    statsTabBtn.classList.add('active');
-                    statsTabContent.classList.add('active');
-                     // Reset button active state when switching to this tab
-                    document.querySelectorAll('#stats-buttons .filter-button').forEach(btn => btn.classList.remove('active'));
-                }
+        <div id="tab-inner" class="preview-content">
+            <div class="inner-tablet" id="prev-inner-container">
+                </div>
+        </div>
+
+        <div id="tab-text" class="preview-content" style="flex-direction: column;">
+            <textarea id="text-output" readonly></textarea>
+            <button class="btn-copy" onclick="copyText()">複製全文至剪貼簿</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 防 XSS 轉義
+    function escapeHTML(str) {
+        return str.replace(/[&<>'"]/g, function(tag) {
+            const charsToReplace = {
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
             };
-
-            inventoryTabBtn.addEventListener('click', () => switchTab('inventory'));
-            statusTabBtn.addEventListener('click', () => switchTab('status'));
-            statsTabBtn.addEventListener('click', () => switchTab('stats'));
-
-            const generateStats = (selectedLayers = []) => {
-                statsList.innerHTML = '';
-                totalStatsContainer.classList.add('hidden');
-                let totalSold = 0;
-                let totalUnsold = 0;
-
-                if (selectedLayers.length === 0) {
-                     statsList.innerHTML = '<p class="text-center text-gray-500">請點擊上方按鈕以顯示統計資料。</p>';
-                     return;
-                }
-
-                const stats = {};
-                selectedLayers.forEach(layer => {
-                    if (allTowerData[layer]) {
-                        if (!stats[layer]) {
-                            stats[layer] = {};
-                        }
-                        for (const area in allTowerData[layer]) {
-                            if (!stats[layer][area]) {
-                                stats[layer][area] = { sold: 0, unsold: 0 };
-                            }
-                            
-                            for (const number in allTowerData[layer][area]) {
-                                for (const tier in allTowerData[layer][area][number]) {
-                                    const salesStatus = allTowerData[layer][area][number][tier];
-                                    if (salesStatus === '已售') {
-                                        stats[layer][area].sold++;
-                                        totalSold++;
-                                    } else {
-                                        stats[layer][area].unsold++;
-                                        totalUnsold++;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-                
-                renderStats(stats, totalSold, totalUnsold);
-            };
-
-            const renderStats = (stats, totalSold, totalUnsold) => {
-                statsList.innerHTML = '';
-                const sortedLayers = Object.keys(stats).sort();
-
-                if (sortedLayers.length === 0) {
-                    statsList.innerHTML = '<p class="text-center text-gray-500">沒有找到任何統計資料。</p>';
-                    return;
-                }
-
-                sortedLayers.forEach(layer => {
-                    const sortedAreas = Object.keys(stats[layer]).sort();
-                    sortedAreas.forEach(area => {
-                        const stat = stats[layer][area];
-                        const statItem = document.createElement('div');
-                        statItem.className = 'p-4 rounded-lg bg-gray-50 border border-gray-200';
-                        statItem.innerHTML = `
-                            <h3 class="font-bold text-gray-800 text-sm mb-1">樓層: ${layer}, 區域: ${area}</h3>
-                            <p class="text-xs text-red-500 font-semibold">已售: ${stat.sold} 個</p>
-                            <p class="text-xs text-green-600 font-semibold">未售: ${stat.unsold} 個</p>
-                        `;
-                        statsList.appendChild(statItem);
-                    });
-                });
-
-                // Update total stats and show the container
-                totalSoldSpan.textContent = totalSold;
-                totalUnsoldSpan.textContent = totalUnsold;
-                totalStatsContainer.classList.remove('hidden');
-            };
-
-            const renderTowerList = (groupedData) => {
-                towerListContainer.innerHTML = '';
-                if (Object.keys(groupedData).length === 0) {
-                    towerListContainer.innerHTML = '<p class="text-center text-gray-500 mt-8">沒有找到相關的塔位資料。</p>';
-                    return;
-                }
-
-                const sortedTowerIds = Object.keys(groupedData).sort();
-
-                sortedTowerIds.forEach(towerId => {
-                    const towerItemDiv = document.createElement('div');
-                    towerItemDiv.className = `tower-item rounded-lg shadow-sm`;
-                    
-                    const layerListDiv = document.createElement('div');
-                    layerListDiv.className = `layer-list`;
-                    
-                    const sortedTiers = Object.keys(groupedData[towerId]).sort((a, b) => {
-                        return parseInt(a, 10) - parseInt(b, 10);
-                    });
-
-                    sortedTiers.forEach(tier => {
-                        const salesStatus = groupedData[towerId][tier];
-                        const layerItemDiv = document.createElement('div');
-                        layerItemDiv.className = `layer-item ${salesStatus === '已售' ? 'sold' : 'unsold'}`;
-                        layerItemDiv.innerHTML = `
-                            <span class="font-bold">${tier}層</span>
-                            <span class="status">${salesStatus}</span>
-                        `;
-                        layerListDiv.appendChild(layerItemDiv);
-                    });
-
-                    towerItemDiv.innerHTML = `
-                        <h3 class="font-bold text-base text-gray-800 text-center">${towerId}</h3>
-                    `;
-                    towerItemDiv.appendChild(layerListDiv);
-                    towerListContainer.appendChild(towerItemDiv);
-                });
-            };
-
-            const createStatusButtons = () => {
-                statusButtonsContainer.innerHTML = '';
-                const allButton = document.createElement('button');
-                allButton.textContent = '全部顯示';
-                allButton.className = 'filter-button';
-                allButton.addEventListener('click', () => {
-                    renderAllTowers();
-                    document.querySelectorAll('#status-buttons .filter-button').forEach(btn => btn.classList.remove('active'));
-                    allButton.classList.add('active');
-                });
-                statusButtonsContainer.appendChild(allButton);
-
-                const sortedLayers = Object.keys(allTowerData).sort();
-                sortedLayers.forEach(layer => {
-                    const layerButton = document.createElement('button');
-                    layerButton.textContent = `樓層 ${layer}`;
-                    layerButton.className = 'filter-button';
-                    layerButton.addEventListener('click', () => {
-                        renderTowersByLayer(layer);
-                        document.querySelectorAll('#status-buttons .filter-button').forEach(btn => btn.classList.remove('active'));
-                        layerButton.classList.add('active');
-                    });
-                    statusButtonsContainer.appendChild(layerButton);
-                });
-            };
-
-            const createStatsButtons = () => {
-                statsButtonsContainer.innerHTML = '';
-                const sortedLayers = Object.keys(allTowerData).sort();
-                
-                // Create individual layer buttons first
-                sortedLayers.forEach(layer => {
-                    const layerButton = document.createElement('button');
-                    layerButton.textContent = `樓層 ${layer}`;
-                    layerButton.className = 'filter-button';
-                    layerButton.dataset.layer = layer;
-                    layerButton.addEventListener('click', () => {
-                        layerButton.classList.toggle('active');
-                        // Deactivate "全部顯示" button if any layer button is clicked
-                        const allStatsButton = document.getElementById('allStatsButton');
-                        if (allStatsButton) {
-                            allStatsButton.classList.remove('active');
-                        }
-                        const activeLayerButtons = document.querySelectorAll('#stats-buttons .filter-button.active[data-layer]');
-                        const selectedLayers = Array.from(activeLayerButtons).map(btn => btn.dataset.layer);
-                        generateStats(selectedLayers);
-                    });
-                    statsButtonsContainer.appendChild(layerButton);
-                });
-                
-                // Create "Show All" button at the end
-                const allButton = document.createElement('button');
-                allButton.textContent = '全部顯示';
-                allButton.className = 'filter-button';
-                allButton.id = 'allStatsButton';
-                allButton.addEventListener('click', () => {
-                    const isNowActive = allButton.classList.toggle('active');
-                    const layerButtons = document.querySelectorAll('#stats-buttons .filter-button[data-layer]');
-                    
-                    if (isNowActive) {
-                        // Activate all layer buttons and generate stats for all layers
-                        layerButtons.forEach(btn => btn.classList.add('active'));
-                        const selectedLayers = Object.keys(allTowerData).sort();
-                        generateStats(selectedLayers);
-                    } else {
-                        // Deactivate all layer buttons and clear stats
-                        layerButtons.forEach(btn => btn.classList.remove('active'));
-                        generateStats([]); // Pass an empty array
-                    }
-                });
-                statsButtonsContainer.appendChild(allButton);
-            };
-
-            const renderAllTowers = () => {
-                const allData = {};
-                for (const layer in allTowerData) {
-                    for (const area in allTowerData[layer]) {
-                        for (const number in allTowerData[layer][area]) {
-                            const towerId = `${layer}-${area}-${number}`;
-                            allData[towerId] = allTowerData[layer][area][number];
-                        }
-                    }
-                }
-                renderTowerList(allData);
-            };
-
-            const renderTowersByLayer = (selectedLayer) => {
-                const filteredData = {};
-                for (const layer in allTowerData) {
-                    if (layer === selectedLayer) {
-                        for (const area in allTowerData[layer]) {
-                            for (const number in allTowerData[layer][area]) {
-                                const towerId = `${layer}-${area}-${number}`;
-                                filteredData[towerId] = allTowerData[layer][area][number];
-                            }
-                        }
-                    }
-                }
-                renderTowerList(filteredData);
-            };
-
-            const parseFile = (file) => {
-                loadingIndicator.classList.remove('hidden');
-                towerListContainer.innerHTML = '';
-                fileError.classList.add('hidden');
-                tabsContainer.classList.add('hidden');
-                statusButtonsContainer.innerHTML = ''; // Clear buttons on new file load
-                statsButtonsContainer.innerHTML = '';
-                statsList.innerHTML = '';
-                totalStatsContainer.classList.add('hidden');
-
-                const selectedEncoding = encodingSelect.value;
-                
-                Papa.parse(file, {
-                    header: false,
-                    skipEmptyLines: true,
-                    encoding: selectedEncoding,
-                    complete: function(results) {
-                        loadingIndicator.classList.add('hidden');
-                        if (results.data && results.data.length > 5) {
-                            allTowerData = {};
-                            const dataLines = results.data.slice(5);
-                            
-                            dataLines.forEach(row => {
-                                // 塔位編號在欄位 B (索引 1)
-                                const fullTowerId = row[1] ? row[1].trim() : '';
-                                if (!fullTowerId) return;
-
-                                const parts = fullTowerId.split('-');
-                                if (parts.length < 4) return;
-                                
-                                const layer = parts[0].trim();
-                                const area = parts[1].trim();
-                                const number = parts[2].trim();
-                                // 樓層號碼位於分割後的最後一個元素
-                                const tier = parts[parts.length - 1].trim(); 
-                                
-                                // 銷售別在欄位 C (索引 2)
-                                const salesStatus = row[2] ? row[2].trim() : '';
-
-                                if (!allTowerData[layer]) {
-                                    allTowerData[layer] = {};
-                                }
-                                if (!allTowerData[layer][area]) {
-                                    allTowerData[layer][area] = {};
-                                }
-                                if (!allTowerData[layer][area][number]) {
-                                    allTowerData[layer][area][number] = {};
-                                }
-                                
-                                allTowerData[layer][area][number][tier] = salesStatus;
-                            });
-
-                            tabsContainer.classList.remove('hidden');
-                            createStatusButtons();
-                            createStatsButtons();
-                            switchTab('inventory');
-                        } else {
-                            fileError.classList.remove('hidden');
-                            towerListContainer.innerHTML = `<p class="text-center text-red-500 mt-8">檔案讀取失敗，請確認檔案格式是否正確。</p>`;
-                        }
-                    },
-                    error: function(error) {
-                        loadingIndicator.classList.add('hidden');
-                        console.error('Error parsing CSV:', error);
-                        fileError.classList.remove('hidden');
-                        towerListContainer.innerHTML = `<p class="text-center text-red-500 mt-8">檔案讀取失敗，請確認檔案格式是否正確。</p>`;
-                    }
-                });
-            };
-
-            const performSearch = () => {
-                const searchLayer = layerInput.value.trim();
-                const searchArea = areaInput.value.trim().toUpperCase();
-                const searchNumber = numberInput.value.trim();
-                
-                const filteredData = {};
-                
-                if (!searchLayer && !searchArea && !searchNumber) {
-                    towerListContainer.innerHTML = '<p class="text-center text-gray-500 mt-8">請至少輸入一個查詢條件。</p>';
-                    return;
-                }
-
-                for (const layer in allTowerData) {
-                    if (searchLayer && layer !== searchLayer) continue;
-                    
-                    for (const area in allTowerData[layer]) {
-                        if (searchArea && area !== searchArea) continue;
-
-                        for (const number in allTowerData[layer][area]) {
-                            if (searchNumber && number !== searchNumber) continue;
-                            
-                            const towerId = `${layer}-${area}-${number}`;
-                            filteredData[towerId] = allTowerData[layer][area][number];
-                        }
-                    }
-                }
-                
-                renderTowerList(filteredData);
-            };
-
-            csvFileInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-                parseFile(file);
-            });
-            
-            encodingSelect.addEventListener('change', () => {
-                const file = csvFileInput.files[0];
-                if (file) {
-                    parseFile(file);
-                }
-            });
-
-            searchButton.addEventListener('click', performSearch);
+            return charsToReplace[tag] || tag;
         });
-    </script>
+    }
+
+    // 計算生老病死苦 (字數除以5: 1生, 2老, 3病, 4死, 0苦)
+    function getFortune(text) {
+        const cleanStr = text.replace(/[\s\p{P}]/gu, '');
+        const len = cleanStr.length;
+        if (len === 0) return '';
+        const fortunes = ['苦', '生', '老', '病', '死'];
+        const result = fortunes[len % 5];
+        return `${len}字(${result})`;
+    }
+
+    function updateFortuneLabel(elementId, text, targetFortunes) {
+        const el = document.getElementById(elementId);
+        const fortuneStr = getFortune(text);
+        el.textContent = fortuneStr;
+        // 允許目標吉數為陣列 (例如中行通常為老，左右為生)
+        const isLucky = targetFortunes.some(target => fortuneStr.includes(target));
+        el.style.color = isLucky ? '#4CAF50' : '#d32f2f';
+    }
+
+    // 內牌預設資料
+    const defaultInnerData = {
+        single: [
+            { title: "個人", name: "陳文華", main: "顯考陳公諱文華官一位神位", birth: "生於民國三十年二月十五日受生", death: "卒于民國一一二年八月十日別逝" }
+        ],
+        couple: [
+            { title: "夫", name: "陳仁德", main: "顯考陳公諱仁德官一位神位", birth: "生於民國二十五年三月十日受生", death: "卒于民國一一〇年五月五日別逝" },
+            { title: "妻", name: "陳李淑真", main: "顯妣陳門李氏淑真娘之神位", birth: "生於民國二十八年四月十二日受生", death: "卒于民國一一一年十月二日別逝" }
+        ],
+        trio: [
+            { title: "中(主)", name: "陳仁德", main: "顯考陳公諱仁德官一位神位", birth: "生於民國二十五年三月十日受生", death: "卒于民國一一〇年五月五日別逝" },
+            { title: "右", name: "陳李淑真", main: "顯妣陳門李氏淑真娘之神位", birth: "生於民國二十八年四月十二日受生", death: "卒于民國一一一年十月二日別逝" },
+            { title: "左", name: "陳王春嬌", main: "顯妣陳門王氏春嬌娘之神位", birth: "生於民國三十年一月一日受生", death: "卒于民國一〇五年六月六日別逝" }
+        ]
+    };
+
+    let currentInnerData = [];
+
+    // 初始化
+    function init() {
+        document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
+        document.getElementById('surname').addEventListener('input', handleOuterTypeChange);
+        
+        const inputs = document.querySelectorAll('.settings-panel input');
+        inputs.forEach(input => input.addEventListener('input', updateAll));
+
+        document.getElementById('innerType').addEventListener('change', (e) => {
+            renderInnerForms(e.target.value);
+            updateAll();
+        });
+
+        renderInnerForms('single');
+        updateAll();
+    }
+
+    // 處理外牌中央主文自動產生
+    function handleOuterTypeChange() {
+        const type = document.getElementById('outerType').value;
+        const surname = document.getElementById('surname').value || '〇';
+        const middleInput = document.getElementById('outerMiddle');
+        
+        if (type === 'ancestor') {
+            middleInput.value = `堂上${surname}姓歷代祖考妣之神位`;
+        } else if (type === 'male') {
+            middleInput.value = `顯考${surname}公諱〇〇官一位神位`;
+        } else if (type === 'female') {
+            middleInput.value = `顯妣${surname}門〇氏〇〇娘之神位`;
+        }
+        updateAll();
+    }
+
+    // 渲染內牌輸入表單
+    function renderInnerForms(type) {
+        const container = document.getElementById('inner-forms-container');
+        container.innerHTML = '';
+        currentInnerData = defaultInnerData[type];
+
+        currentInnerData.forEach((person, index) => {
+            const html = `
+                <div class="inner-person-block">
+                    <h4 style="margin-top:0; color:#cc0000; border-bottom:1px solid #ddd; padding-bottom:5px;">${person.title}</h4>
+                    <div class="form-group">
+                        <label>姓名</label>
+                        <input type="text" id="inner-name-${index}" value="${person.name}" oninput="updateAll()">
+                    </div>
+                    <div class="form-group">
+                        <label>內牌主文 (中央) <span class="fortune-tag" id="ft-inner-main-${index}"></span></label>
+                        <input type="text" id="inner-main-${index}" value="${person.main}" oninput="updateAll()">
+                    </div>
+                    <div class="form-group">
+                        <label>生日 (右行) <span class="fortune-tag" id="ft-inner-birth-${index}"></span></label>
+                        <input type="text" id="inner-birth-${index}" value="${person.birth}" oninput="updateAll()">
+                    </div>
+                    <div class="form-group">
+                        <label>忌日 (左行) <span class="fortune-tag" id="ft-inner-death-${index}"></span></label>
+                        <input type="text" id="inner-death-${index}" value="${person.death}" oninput="updateAll()">
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    // 統一更新預覽與純文字
+    function updateAll() {
+        const tabletId = escapeHTML(document.getElementById('tabletId').value);
+        const entryDate = escapeHTML(document.getElementById('entryDate').value);
+
+        // 外牌資料
+        const tanghaoOrig = escapeHTML(document.getElementById('tanghao').value);
+        // 堂號視覺強制左右置換 (例: 穎川 -> 川穎)
+        const tanghaoReversed = tanghaoOrig.split('').reverse().join('');
+        
+        const year = escapeHTML(document.getElementById('year').value);
+        const outerMiddle = escapeHTML(document.getElementById('outerMiddle').value);
+        const worship = escapeHTML(document.getElementById('worship').value);
+
+        // 更新外牌吉凶
+        updateFortuneLabel('ft-tanghao', tanghaoOrig, ['老']); 
+        updateFortuneLabel('ft-year', year, ['生']);       
+        updateFortuneLabel('ft-outermiddle', outerMiddle, ['老']); 
+        updateFortuneLabel('ft-worship', worship, ['生']); 
+
+        // 更新外牌視覺
+        document.getElementById('prev-tanghao').innerHTML = tanghaoReversed;
+        document.getElementById('prev-year').innerHTML = year;
+        document.getElementById('prev-outermiddle').innerHTML = outerMiddle;
+        document.getElementById('prev-worship').innerHTML = worship;
+
+        // 內牌資料處理
+        const innerContainer = document.getElementById('prev-inner-container');
+        innerContainer.innerHTML = '';
+        let textOutputInner = '';
+
+        currentInnerData.forEach((_, index) => {
+            const main = escapeHTML(document.getElementById(`inner-main-${index}`).value);
+            // 強制確保前綴字
+            let birth = escapeHTML(document.getElementById(`inner-birth-${index}`).value);
+            let death = escapeHTML(document.getElementById(`inner-death-${index}`).value);
+
+            if(!birth.startsWith('生於') && birth.trim() !== '') birth = '生於' + birth.replace(/^生[於于]/, '');
+            if(!death.startsWith('卒于') && death.trim() !== '') death = '卒于' + death.replace(/^卒[於于]/, '');
+
+            // 內牌吉凶驗算
+            updateFortuneLabel(`ft-inner-main-${index}`, main, ['老', '生']);
+            updateFortuneLabel(`ft-inner-birth-${index}`, birth, ['老', '生']);
+            updateFortuneLabel(`ft-inner-death-${index}`, death, ['老', '生']);
+
+            // 視覺組裝 (右至左：生日、主文、忌日)
+            const personHtml = `
+                <div class="inner-person-col">
+                    <div class="inner-side">${birth}</div>
+                    <div class="inner-main">${main}</div>
+                    <div class="inner-side">${death}</div>
+                </div>
+            `;
+            innerContainer.insertAdjacentHTML('afterbegin', personHtml); 
+
+            // 文字組裝
+            const name = escapeHTML(document.getElementById(`inner-name-${index}`).value);
+            textOutputInner += `\n【內牌 - ${name}】\n`;
+            textOutputInner += `第一行(右)：${birth}\n`;
+            textOutputInner += `中間行：${main}\n`;
+            textOutputInner += `第三行(左)：${death}\n`;
+        });
+
+        // 總合純文字輸出
+        const textOutput = `牌位編號：${tabletId}\n入牌日期：${entryDate}\n\n` +
+                           `【外牌】\n` +
+                           `頂部(橫排)：${tanghaoOrig}\n` +
+                           `第一行(右)：${year}\n` +
+                           `中間行：${outerMiddle}\n` +
+                           `第三行(左)：${worship}\n` +
+                           `${textOutputInner}`;
+        
+        document.getElementById('text-output').value = textOutput;
+    }
+
+    // 頁籤切換
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.preview-content').forEach(content => content.classList.remove('active'));
+        
+        event.target.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    // 複製純文字
+    function copyText() {
+        const text = document.getElementById('text-output');
+        text.select();
+        text.setSelectionRange(0, 99999); 
+        navigator.clipboard.writeText(text.value).then(() => {
+            alert("已成功複製牌位純文字內容！");
+        }).catch(err => {
+            alert("複製失敗，請手動選取後複製。");
+        });
+    }
+
+    window.onload = init;
+</script>
+
 </body>
 </html>
