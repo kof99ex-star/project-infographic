@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位排字工具 - 第五版-by 瑋志</title>
+    <title>神主牌位排字工具 - 第六版-by 瑋志</title>
     <style>
         :root {
             --wood-bg: linear-gradient(135deg, #d2a679 0%, #b37746 100%);
@@ -132,9 +132,34 @@
         }
 
         .tanghao { writing-mode: horizontal-tb; text-align: center; font-size: 1.6rem; font-weight: bold; margin-bottom: 20px; letter-spacing: 5px; width: 100%; }
-        .tablet-body { display: flex; justify-content: space-between; width: 100%; height: 100%; padding: 0 10px; box-sizing: border-box; }
-        .col-right, .col-left { font-size: 1.1rem; line-height: 1.5; padding-top: 50px; writing-mode: vertical-rl; text-orientation: upright; }
-        .col-middle { font-size: 1.7rem; font-weight: bold; letter-spacing: 2px; text-align: center; writing-mode: vertical-rl; text-orientation: upright; }
+        
+        .tablet-body { 
+            display: flex; 
+            justify-content: space-between; 
+            width: 100%; 
+            height: 100%; 
+            padding: 0 15px 40px 15px; 
+            box-sizing: border-box; 
+            align-items: flex-end; 
+        }
+
+        .col-right, .col-left { 
+            font-size: 1.1rem; 
+            line-height: 1.5; 
+            writing-mode: vertical-rl; 
+            text-orientation: upright;
+            height: auto;
+        }
+
+        .col-middle { 
+            font-size: 1.7rem; 
+            font-weight: bold; 
+            letter-spacing: 2px; 
+            text-align: center; 
+            writing-mode: vertical-rl; 
+            text-orientation: upright;
+            height: auto;
+        }
 
         /* 內牌視覺 */
         #prev-inner-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
@@ -205,12 +230,12 @@
                 <input type="text" id="outerMiddle" value="堂上陳姓歷代祖考妣之神位">
             </div>
             <div class="form-group">
-                <label>年份 (右行) <span class="fortune-tag" id="ft-year"></span></label>
-                <input type="text" id="year" value="歲次甲辰年立">
+                <label>奉祀人 (右行) <span class="fortune-tag" id="ft-worship"></span></label>
+                <input type="text" id="worship" value="陽上子孫奉祀">
             </div>
             <div class="form-group">
-                <label>奉祀人 (左行) <span class="fortune-tag" id="ft-worship"></span></label>
-                <input type="text" id="worship" value="陽上子孫奉祀">
+                <label>年份 (左行) <span class="fortune-tag" id="ft-year"></span></label>
+                <input type="text" id="year" value="歲次甲辰年立">
             </div>
         </div>
 
@@ -228,12 +253,12 @@
 
         <div id="tab-outer" class="preview-content active">
             <div class="outer-tablet">
-                <div style="width:100%; display:flex; flex-direction:column; align-items:center;">
+                <div style="width:100%; display:flex; flex-direction:column; align-items:center; height:100%;">
                     <div class="tanghao" id="prev-tanghao"></div>
                     <div class="tablet-body">
-                        <div class="col-right" id="prev-year"></div>
+                        <div class="col-right" id="prev-worship"></div>
                         <div class="col-middle" id="prev-outermiddle"></div>
-                        <div class="col-left" id="prev-worship"></div>
+                        <div class="col-left" id="prev-year"></div>
                     </div>
                 </div>
             </div>
@@ -276,7 +301,6 @@
         if (mode === 'innerOnly') {
             outerSection.classList.add('mode-hidden');
             outerTabBtn.classList.add('hidden');
-            // 如果當前在「外牌視覺」，自動切換到「內牌視覺」
             if (outerTabBtn.classList.contains('active')) {
                 switchTab('tab-inner', document.getElementById('btn-tab-inner'));
             }
@@ -408,7 +432,8 @@
             document.getElementById('prev-outermiddle').innerText = outerMiddle;
             document.getElementById('prev-worship').innerText = worship;
 
-            fullText += `\n【外牌】\n頂部：${tanghaoOrig}\n右：${year}\n中：${outerMiddle}\n左：${worship}\n`;
+            // 修改此處：移除右、中、左標籤，直接輸出內容
+            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${worship}\n${outerMiddle}\n${year}\n`;
         }
 
         // 處理內牌
@@ -430,7 +455,7 @@
                 col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${p.main}</div><div class="inner-side">${p.birth}</div>`;
                 sheetDiv.prepend(col); 
 
-                sheetText += `成員${pIdx+1}(${p.name})：右[${p.birth}] 中[${p.main}] 左[${p.death}]\n`;
+                sheetText += `成員${pIdx+1}(${p.name})：\n${p.birth}\n${p.main}\n${p.death}\n`;
             });
 
             innerPrevContainer.appendChild(sheetDiv);
