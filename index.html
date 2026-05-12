@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位排字工具 - by瑋志</title>
+    <title>神主牌位排字工具 - by 瑋志</title>
     <style>
         :root {
             --wood-bg: linear-gradient(135deg, #d2a679 0%, #b37746 100%);
@@ -65,7 +65,6 @@
 
         .fortune-tag { font-size: 0.85rem; color: #d32f2f; margin-left: 10px; font-weight: normal; }
 
-        /* 內牌片塊樣式 */
         .inner-sheet-block {
             background: #fdfdfd;
             border: 1px solid #ddd;
@@ -116,6 +115,7 @@
             border-radius: 5px 5px 0 0; font-size: 1rem; font-family: inherit; font-weight: bold; flex: 1;
         }
         .tab-btn.active { background: #b37746; color: #fff; }
+        .tab-btn.hidden { display: none; }
 
         .preview-content {
             background: #fff; padding: 30px; border-radius: 0 10px 10px 10px;
@@ -151,6 +151,9 @@
         #text-output { width: 100%; height: 500px; padding: 20px; background: #fafafa; border: 1px solid #ddd; border-radius: 5px; font-family: "Courier New", monospace; font-size: 1.1rem; line-height: 1.8; resize: vertical; box-sizing: border-box; }
         .btn-copy { background: #4CAF50; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1rem; margin-top: 15px; width: 100%; font-weight: bold; }
 
+        /* 動態隱藏區塊 */
+        .mode-hidden { display: none !important; }
+
         @media (max-width: 900px) { .container { flex-direction: column; } .settings-panel { max-height: none; } }
     </style>
 </head>
@@ -159,6 +162,13 @@
 <div class="container">
     <div class="settings-panel">
         <h2>管理資訊</h2>
+        <div class="form-group">
+            <label>顯示模式</label>
+            <select id="displayMode" onchange="toggleDisplayMode()">
+                <option value="both">外牌 + 內牌</option>
+                <option value="innerOnly">僅內牌</option>
+            </select>
+        </div>
         <div class="form-row">
             <div class="form-group">
                 <label>牌位編號</label>
@@ -170,48 +180,49 @@
             </div>
         </div>
 
-        <h2>外牌設定</h2>
-        <div class="form-row">
-            <div class="form-group">
-                <label>牌位類型</label>
-                <select id="outerType">
-                    <option value="ancestor">歷代祖先牌位</option>
-                    <option value="male">個人牌位(男)</option>
-                    <option value="female">個人牌位(女)</option>
-                </select>
+        <div id="outer-settings-section">
+            <h2>外牌設定</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>牌位類型</label>
+                    <select id="outerType">
+                        <option value="ancestor">歷代祖先牌位</option>
+                        <option value="male">個人牌位(男)</option>
+                        <option value="female">個人牌位(女)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>姓氏</label>
+                    <input type="text" id="surname" value="陳">
+                </div>
             </div>
             <div class="form-group">
-                <label>姓氏</label>
-                <input type="text" id="surname" value="陳">
+                <label>堂號 (橫批) <span class="fortune-tag" id="ft-tanghao"></span></label>
+                <input type="text" id="tanghao" value="穎　川">
             </div>
-        </div>
-        <div class="form-group">
-            <label>堂號 (橫批) <span class="fortune-tag" id="ft-tanghao"></span></label>
-            <input type="text" id="tanghao" value="穎　川">
-        </div>
-        <div class="form-group">
-            <label>外牌主文 (中行) <span class="fortune-tag" id="ft-outermiddle"></span></label>
-            <input type="text" id="outerMiddle" value="堂上陳姓歷代祖考妣之神位">
-        </div>
-        <div class="form-group">
-            <label>年份 (右行) <span class="fortune-tag" id="ft-year"></span></label>
-            <input type="text" id="year" value="歲次甲辰年立">
-        </div>
-        <div class="form-group">
-            <label>奉祀人 (左行) <span class="fortune-tag" id="ft-worship"></span></label>
-            <input type="text" id="worship" value="陽上子孫奉祀">
+            <div class="form-group">
+                <label>外牌主文 (中行) <span class="fortune-tag" id="ft-outermiddle"></span></label>
+                <input type="text" id="outerMiddle" value="堂上陳姓歷代祖考妣之神位">
+            </div>
+            <div class="form-group">
+                <label>年份 (右行) <span class="fortune-tag" id="ft-year"></span></label>
+                <input type="text" id="year" value="歲次甲辰年立">
+            </div>
+            <div class="form-group">
+                <label>奉祀人 (左行) <span class="fortune-tag" id="ft-worship"></span></label>
+                <input type="text" id="worship" value="陽上子孫奉祀">
+            </div>
         </div>
 
         <h2 style="margin-top:30px;">內牌管理 (可多片)</h2>
         <button class="btn-add-sheet" onclick="addInnerSheet()">+ 新增內牌木片</button>
-        <div id="inner-sheets-container">
-            </div>
+        <div id="inner-sheets-container"></div>
     </div>
 
     <div class="preview-panel">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('tab-outer', this)">外牌視覺</button>
-            <button class="tab-btn" onclick="switchTab('tab-inner', this)">內牌視覺</button>
+            <button id="btn-tab-outer" class="tab-btn active" onclick="switchTab('tab-outer', this)">外牌視覺</button>
+            <button id="btn-tab-inner" class="tab-btn" onclick="switchTab('tab-inner', this)">內牌視覺</button>
             <button class="tab-btn" onclick="switchTab('tab-text', this)">純文字輸出</button>
         </div>
 
@@ -229,8 +240,7 @@
         </div>
 
         <div id="tab-inner" class="preview-content">
-            <div id="prev-inner-container">
-                </div>
+            <div id="prev-inner-container"></div>
         </div>
 
         <div id="tab-text" class="preview-content" style="flex-direction: column;">
@@ -251,10 +261,29 @@
     function init() {
         document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
         document.getElementById('surname').addEventListener('input', handleOuterTypeChange);
-        document.querySelectorAll('.settings-panel > .form-group input, .settings-panel > .form-row input').forEach(el => {
+        document.querySelectorAll('.settings-panel input, .settings-panel select').forEach(el => {
             el.addEventListener('input', updateAll);
         });
         renderInnerSheets();
+        updateAll();
+    }
+
+    function toggleDisplayMode() {
+        const mode = document.getElementById('displayMode').value;
+        const outerSection = document.getElementById('outer-settings-section');
+        const outerTabBtn = document.getElementById('btn-tab-outer');
+
+        if (mode === 'innerOnly') {
+            outerSection.classList.add('mode-hidden');
+            outerTabBtn.classList.add('hidden');
+            // 如果當前在「外牌視覺」，自動切換到「內牌視覺」
+            if (outerTabBtn.classList.contains('active')) {
+                switchTab('tab-inner', document.getElementById('btn-tab-inner'));
+            }
+        } else {
+            outerSection.classList.remove('mode-hidden');
+            outerTabBtn.classList.remove('hidden');
+        }
         updateAll();
     }
 
@@ -355,26 +384,37 @@
     }
 
     function updateAll() {
-        const tanghaoOrig = document.getElementById('tanghao').value;
-        const tanghaoReversed = tanghaoOrig.split('').reverse().join('');
-        const year = document.getElementById('year').value;
-        const outerMiddle = document.getElementById('outerMiddle').value;
-        const worship = document.getElementById('worship').value;
+        const mode = document.getElementById('displayMode').value;
+        const tabletId = document.getElementById('tabletId').value;
+        const entryDate = document.getElementById('entryDate').value;
+        
+        let fullText = `牌位編號：${tabletId}\n入牌日期：${entryDate}\n`;
 
-        updateFortuneLabel('ft-tanghao', tanghaoOrig, ['老']);
-        updateFortuneLabel('ft-year', year, ['生']);
-        updateFortuneLabel('ft-outermiddle', outerMiddle, ['老']);
-        updateFortuneLabel('ft-worship', worship, ['生']);
+        // 處理外牌
+        if (mode === 'both') {
+            const tanghaoOrig = document.getElementById('tanghao').value;
+            const tanghaoReversed = tanghaoOrig.split('').reverse().join('');
+            const year = document.getElementById('year').value;
+            const outerMiddle = document.getElementById('outerMiddle').value;
+            const worship = document.getElementById('worship').value;
 
-        document.getElementById('prev-tanghao').innerText = tanghaoReversed;
-        document.getElementById('prev-year').innerText = year;
-        document.getElementById('prev-outermiddle').innerText = outerMiddle;
-        document.getElementById('prev-worship').innerText = worship;
+            updateFortuneLabel('ft-tanghao', tanghaoOrig, ['老']);
+            updateFortuneLabel('ft-year', year, ['生']);
+            updateFortuneLabel('ft-outermiddle', outerMiddle, ['老']);
+            updateFortuneLabel('ft-worship', worship, ['生']);
 
+            document.getElementById('prev-tanghao').innerText = tanghaoReversed;
+            document.getElementById('prev-year').innerText = year;
+            document.getElementById('prev-outermiddle').innerText = outerMiddle;
+            document.getElementById('prev-worship').innerText = worship;
+
+            fullText += `\n【外牌】\n頂部：${tanghaoOrig}\n右：${year}\n中：${outerMiddle}\n左：${worship}\n`;
+        }
+
+        // 處理內牌
         const innerPrevContainer = document.getElementById('prev-inner-container');
         innerPrevContainer.innerHTML = '';
-        let fullText = `牌位編號：${document.getElementById('tabletId').value}\n入牌日期：${document.getElementById('entryDate').value}\n\n【外牌】\n頂部：${tanghaoOrig}\n右：${year}\n中：${outerMiddle}\n左：${worship}\n`;
-
+        
         innerSheets.forEach((sheet, sIdx) => {
             const sheetDiv = document.createElement('div');
             sheetDiv.className = 'inner-tablet';
@@ -387,7 +427,6 @@
 
                 const col = document.createElement('div');
                 col.className = 'inner-person-col';
-                // 修正處：將忌日放左邊，生日放右邊 (HTML 流向由左至右)
                 col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${p.main}</div><div class="inner-side">${p.birth}</div>`;
                 sheetDiv.prepend(col); 
 
