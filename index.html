@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位排字工具 - 動態增強版 - by 瑋志 </title>
+    <title>神主牌位排字工具 - by瑋志</title>
     <style>
         :root {
             --wood-bg: linear-gradient(135deg, #d2a679 0%, #b37746 100%);
@@ -136,7 +136,7 @@
         .col-right, .col-left { font-size: 1.1rem; line-height: 1.5; padding-top: 50px; writing-mode: vertical-rl; text-orientation: upright; }
         .col-middle { font-size: 1.7rem; font-weight: bold; letter-spacing: 2px; text-align: center; writing-mode: vertical-rl; text-orientation: upright; }
 
-        /* 內牌視覺 - 支援多片 */
+        /* 內牌視覺 */
         #prev-inner-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
         .inner-tablet {
             width: 240px; height: 500px; background: var(--inner-bg); border-radius: 5px;
@@ -241,7 +241,6 @@
 </div>
 
 <script>
-    // 資料結構：Array of Sheets
     let innerSheets = [
         {
             type: 'single',
@@ -257,10 +256,6 @@
         });
         renderInnerSheets();
         updateAll();
-    }
-
-    function escapeHTML(str) {
-        return str.replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[tag]));
     }
 
     function getFortune(text) {
@@ -290,7 +285,6 @@
         updateAll();
     }
 
-    // 內牌管理功能
     function addInnerSheet() {
         innerSheets.push({
             type: 'single',
@@ -361,7 +355,6 @@
     }
 
     function updateAll() {
-        // 外牌更新
         const tanghaoOrig = document.getElementById('tanghao').value;
         const tanghaoReversed = tanghaoOrig.split('').reverse().join('');
         const year = document.getElementById('year').value;
@@ -378,7 +371,6 @@
         document.getElementById('prev-outermiddle').innerText = outerMiddle;
         document.getElementById('prev-worship').innerText = worship;
 
-        // 內牌預覽與文字輸出
         const innerPrevContainer = document.getElementById('prev-inner-container');
         innerPrevContainer.innerHTML = '';
         let fullText = `牌位編號：${document.getElementById('tabletId').value}\n入牌日期：${document.getElementById('entryDate').value}\n\n【外牌】\n頂部：${tanghaoOrig}\n右：${year}\n中：${outerMiddle}\n左：${worship}\n`;
@@ -386,24 +378,20 @@
         innerSheets.forEach((sheet, sIdx) => {
             const sheetDiv = document.createElement('div');
             sheetDiv.className = 'inner-tablet';
-            
-            // 修改後的標題格式
             let sheetText = `\n【內牌木片 ${sIdx + 1} - ${sheet.type}】\n`;
 
-            // 視覺組裝要由左至右 (對應 DOM) 但資料流由右至左
             sheet.persons.forEach((p, pIdx) => {
-                // 吉凶更新
                 updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-m`, p.main, ['老', '生']);
                 updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-b`, p.birth, ['老', '生']);
                 updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-d`, p.death, ['老', '生']);
 
                 const col = document.createElement('div');
                 col.className = 'inner-person-col';
-                col.innerHTML = `<div class="inner-side">${p.birth}</div><div class="inner-main">${p.main}</div><div class="inner-side">${p.death}</div>`;
-                sheetDiv.prepend(col); // 使用 prepend 讓第一個人排在最右邊
+                // 修正處：將忌日放左邊，生日放右邊 (HTML 流向由左至右)
+                col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${p.main}</div><div class="inner-side">${p.birth}</div>`;
+                sheetDiv.prepend(col); 
 
-                // 修改後的純文字輸出格式：姓名、生、中、卒分行
-                sheetText += `${p.name}\n${p.birth}\n${p.main}\n${p.death}\n\n`;
+                sheetText += `成員${pIdx+1}(${p.name})：右[${p.birth}] 中[${p.main}] 左[${p.death}]\n`;
             });
 
             innerPrevContainer.appendChild(sheetDiv);
