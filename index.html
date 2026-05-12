@@ -1,485 +1,1009 @@
 <!DOCTYPE html>
+
 <html lang="zh-TW">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>第六版-by 瑋志</title>
+
+    <title>神主牌位排字工具 - by瑋志</title>
+
     <style>
+
         :root {
+
             --wood-bg: linear-gradient(135deg, #d2a679 0%, #b37746 100%);
+
             --wood-border: #6b4423;
+
             --inner-bg: #cc0000;
+
             --text-dark: #222;
+
             --text-light: #f5f5f5;
+
         }
+
+
 
         body {
+
             font-family: "BiauKai", "DFKai-SB", "Kaiti", "標楷體", serif;
+
             margin: 0;
+
             padding: 20px;
+
             background-color: #f0ece1;
+
             color: #333;
+
         }
+
+
+
+        /* 新增頁首標題樣式 */
+
+        .page-header {
+
+            text-align: center;
+
+            margin-bottom: 30px;
+
+            padding-bottom: 10px;
+
+            border-bottom: 3px double #b37746;
+
+        }
+
+
+
+        .page-header h1 {
+
+            color: #6b4423;
+
+            font-size: 2.5rem;
+
+            margin: 0;
+
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+
+            letter-spacing: 4px;
+
+        }
+
+
 
         .container {
+
             display: flex;
+
             flex-wrap: wrap;
+
             gap: 30px;
+
             max-width: 1300px;
+
             margin: 0 auto;
+
         }
+
+
 
         /* 左側設定區 */
+
         .settings-panel {
+
             flex: 1;
+
             min-width: 380px;
+
             background: #fff;
+
             padding: 25px;
+
             border-radius: 10px;
+
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+
             max-height: 90vh;
+
             overflow-y: auto;
+
         }
+
+
 
         h2 {
+
             border-bottom: 2px solid #b37746;
+
             padding-bottom: 10px;
+
             color: #6b4423;
+
             font-size: 1.4rem;
+
             margin-top: 0;
+
         }
+
+
 
         .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
+
         .form-group { margin-bottom: 15px; flex: 1; }
+
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.95rem; }
 
+
+
         input[type="text"], select {
+
             width: 100%;
+
             padding: 10px;
+
             border: 1px solid #ccc;
+
             border-radius: 5px;
+
             font-size: 1rem;
+
             box-sizing: border-box;
+
             font-family: inherit;
+
         }
+
+
 
         .fortune-tag { font-size: 0.85rem; color: #d32f2f; margin-left: 10px; font-weight: normal; }
 
+
+
         .inner-sheet-block {
+
             background: #fdfdfd;
+
             border: 1px solid #ddd;
+
             padding: 15px;
+
             margin-bottom: 25px;
+
             border-left: 6px solid #cc0000;
+
             position: relative;
+
             border-radius: 4px;
+
         }
+
+
 
         .inner-person-sub-block {
+
             background: #fff;
+
             border: 1px solid #eee;
+
             padding: 10px;
+
             margin-top: 10px;
+
         }
+
+
 
         .btn-add-sheet {
+
             background: #6b4423;
+
             color: white;
+
             padding: 10px 20px;
+
             border: none;
+
             border-radius: 5px;
+
             cursor: pointer;
+
             font-weight: bold;
+
             width: 100%;
+
             margin-bottom: 20px;
+
         }
+
+
 
         .btn-delete-sheet {
+
             position: absolute;
+
             top: 10px;
+
             right: 10px;
+
             background: #ff4444;
+
             color: white;
+
             border: none;
+
             padding: 5px 10px;
+
             border-radius: 3px;
+
             cursor: pointer;
+
             font-size: 0.8rem;
+
         }
+
+
 
         /* 右側預覽區 */
+
         .preview-panel { flex: 1; min-width: 400px; display: flex; flex-direction: column; gap: 20px; }
+
         .tabs { display: flex; gap: 10px; }
+
         .tab-btn {
+
             padding: 10px 20px; border: none; background: #ddd; cursor: pointer;
+
             border-radius: 5px 5px 0 0; font-size: 1rem; font-family: inherit; font-weight: bold; flex: 1;
+
         }
+
         .tab-btn.active { background: #b37746; color: #fff; }
+
         .tab-btn.hidden { display: none; }
 
+
+
         .preview-content {
+
             background: #fff; padding: 30px; border-radius: 0 10px 10px 10px;
+
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; justify-content: center; min-height: 600px;
+
         }
+
         .preview-content.active { display: flex; }
 
+
+
         /* 牌位視覺 */
+
         .outer-tablet {
+
             width: 260px; height: 550px; background: var(--wood-bg); border: 8px solid var(--wood-border);
+
             border-radius: 20px 20px 0 0; color: var(--text-dark); position: relative;
+
             display: flex; align-items: center; outline: 2px solid rgba(0,0,0,0.3) inset;
+
             box-shadow: 5px 10px 20px rgba(0,0,0,0.3);
+
         }
+
+
 
         .tanghao { writing-mode: horizontal-tb; text-align: center; font-size: 1.6rem; font-weight: bold; margin-bottom: 20px; letter-spacing: 5px; width: 100%; }
+
         
+
         .tablet-body { 
+
             display: flex; 
+
             justify-content: space-between; 
+
             width: 100%; 
+
             height: 100%; 
+
             padding: 0 15px 40px 15px; 
+
             box-sizing: border-box; 
+
             align-items: flex-end; 
+
         }
+
+
 
         .col-right, .col-left { 
+
             font-size: 1.1rem; 
+
             line-height: 1.5; 
+
             writing-mode: vertical-rl; 
+
             text-orientation: upright;
+
             height: auto;
+
         }
+
+
 
         .col-middle { 
+
             font-size: 1.7rem; 
+
             font-weight: bold; 
+
             letter-spacing: 2px; 
+
             text-align: center; 
+
             writing-mode: vertical-rl; 
+
             text-orientation: upright;
+
             height: auto;
+
         }
+
+
 
         /* 內牌視覺 */
+
         #prev-inner-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+
         .inner-tablet {
+
             width: 240px; height: 500px; background: var(--inner-bg); border-radius: 5px;
+
             color: #000; padding: 25px 10px; display: flex; justify-content: center; gap: 10px;
+
             box-shadow: 3px 6px 15px rgba(0,0,0,0.3); box-sizing: border-box; position: relative;
+
         }
+
         .inner-person-col { display: flex; justify-content: space-between; height: 100%; border-right: 1px dashed rgba(0,0,0,0.2); padding-right: 8px; }
+
         .inner-person-col:last-child { border-right: none; padding-right: 0; }
+
         .inner-side { font-size: 0.85rem; padding-top: 25px; writing-mode: vertical-rl; text-orientation: upright; line-height: 1.2; }
+
         .inner-main { font-size: 1.2rem; font-weight: bold; margin: 0 2px; writing-mode: vertical-rl; text-orientation: upright; }
 
+
+
         #text-output { width: 100%; height: 500px; padding: 20px; background: #fafafa; border: 1px solid #ddd; border-radius: 5px; font-family: "Courier New", monospace; font-size: 1.1rem; line-height: 1.8; resize: vertical; box-sizing: border-box; }
+
         .btn-copy { background: #4CAF50; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1rem; margin-top: 15px; width: 100%; font-weight: bold; }
 
+
+
         /* 動態隱藏區塊 */
+
         .mode-hidden { display: none !important; }
 
+
+
         @media (max-width: 900px) { .container { flex-direction: column; } .settings-panel { max-height: none; } }
+
     </style>
+
 </head>
+
 <body>
 
-<div class="container">
-    <div class="settings-panel">
-        <h2>管理資訊</h2>
-        <div class="form-group">
-            <label>顯示模式</label>
-            <select id="displayMode" onchange="toggleDisplayMode()">
-                <option value="both">外牌 + 內牌</option>
-                <option value="innerOnly">僅內牌</option>
-            </select>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>牌位編號</label>
-                <input type="text" id="tabletId" value="1F-01-03">
-            </div>
-            <div class="form-group">
-                <label>入牌日期</label>
-                <input type="text" id="entryDate" value="115.05.30">
-            </div>
-        </div>
 
-        <div id="outer-settings-section">
-            <h2>外牌設定</h2>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>牌位類型</label>
-                    <select id="outerType">
-                        <option value="ancestor">歷代祖先牌位</option>
-                        <option value="male">個人牌位(男)</option>
-                        <option value="female">個人牌位(女)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>姓氏</label>
-                    <input type="text" id="surname" value="陳">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>堂號 (橫批) <span class="fortune-tag" id="ft-tanghao"></span></label>
-                <input type="text" id="tanghao" value="穎　川">
-            </div>
-            <div class="form-group">
-                <label>外牌主文 (中行) <span class="fortune-tag" id="ft-outermiddle"></span></label>
-                <input type="text" id="outerMiddle" value="堂上陳姓歷代祖考妣之神位">
-            </div>
-            <div class="form-group">
-                <label>奉祀人 (右行) <span class="fortune-tag" id="ft-worship"></span></label>
-                <input type="text" id="worship" value="陽上子孫奉祀">
-            </div>
-            <div class="form-group">
-                <label>年份 (左行) <span class="fortune-tag" id="ft-year"></span></label>
-                <input type="text" id="year" value="歲次甲辰年立">
-            </div>
-        </div>
 
-        <h2 style="margin-top:30px;">內牌管理 (可多片)</h2>
-        <button class="btn-add-sheet" onclick="addInnerSheet()">+ 新增內牌木片</button>
-        <div id="inner-sheets-container"></div>
-    </div>
+<!-- 新增的頁首區域 -->
 
-    <div class="preview-panel">
-        <div class="tabs">
-            <button id="btn-tab-outer" class="tab-btn active" onclick="switchTab('tab-outer', this)">外牌視覺</button>
-            <button id="btn-tab-inner" class="tab-btn" onclick="switchTab('tab-inner', this)">內牌視覺</button>
-            <button class="tab-btn" onclick="switchTab('tab-text', this)">純文字輸出</button>
-        </div>
+<div class="page-header">
 
-        <div id="tab-outer" class="preview-content active">
-            <div class="outer-tablet">
-                <div style="width:100%; display:flex; flex-direction:column; align-items:center; height:100%;">
-                    <div class="tanghao" id="prev-tanghao"></div>
-                    <div class="tablet-body">
-                        <div class="col-right" id="prev-worship"></div>
-                        <div class="col-middle" id="prev-outermiddle"></div>
-                        <div class="col-left" id="prev-year"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <h1>神主牌位排字小工具-by 814</h1>
 
-        <div id="tab-inner" class="preview-content">
-            <div id="prev-inner-container"></div>
-        </div>
-
-        <div id="tab-text" class="preview-content" style="flex-direction: column;">
-            <textarea id="text-output" readonly></textarea>
-            <button class="btn-copy" onclick="copyText()">複製全文至剪貼簿</button>
-        </div>
-    </div>
 </div>
 
+
+
+<div class="container">
+
+    <div class="settings-panel">
+
+        <h2>管理資訊</h2>
+
+        <div class="form-group">
+
+            <label>顯示模式</label>
+
+            <select id="displayMode" onchange="toggleDisplayMode()">
+
+                <option value="both">外牌 + 內牌</option>
+
+                <option value="innerOnly">僅內牌</option>
+
+            </select>
+
+        </div>
+
+        <div class="form-row">
+
+            <div class="form-group">
+
+                <label>牌位編號</label>
+
+                <input type="text" id="tabletId" value="1F-01-03">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>入牌日期</label>
+
+                <input type="text" id="entryDate" value="115.05.30">
+
+            </div>
+
+        </div>
+
+
+
+        <div id="outer-settings-section">
+
+            <h2>外牌設定</h2>
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label>牌位類型</label>
+
+                    <select id="outerType">
+
+                        <option value="ancestor">歷代祖先牌位</option>
+
+                        <option value="male">個人牌位(男)</option>
+
+                        <option value="female">個人牌位(女)</option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>姓氏</label>
+
+                    <input type="text" id="surname" value="陳">
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>堂號 (橫批) <span class="fortune-tag" id="ft-tanghao"></span></label>
+
+                <input type="text" id="tanghao" value="穎　川">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>外牌主文 (中行) <span class="fortune-tag" id="ft-outermiddle"></span></label>
+
+                <input type="text" id="outerMiddle" value="堂上陳姓歷代祖考妣之神位">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>奉祀人 (右行) <span class="fortune-tag" id="ft-worship"></span></label>
+
+                <input type="text" id="worship" value="陽上子孫奉祀">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>年份 (左行) <span class="fortune-tag" id="ft-year"></span></label>
+
+                <input type="text" id="year" value="歲次甲辰年立">
+
+            </div>
+
+        </div>
+
+
+
+        <h2 style="margin-top:30px;">內牌管理 (可多片)</h2>
+
+        <button class="btn-add-sheet" onclick="addInnerSheet()">+ 新增內牌木片</button>
+
+        <div id="inner-sheets-container"></div>
+
+    </div>
+
+
+
+    <div class="preview-panel">
+
+        <div class="tabs">
+
+            <button id="btn-tab-outer" class="tab-btn active" onclick="switchTab('tab-outer', this)">外牌視覺</button>
+
+            <button id="btn-tab-inner" class="tab-btn" onclick="switchTab('tab-inner', this)">內牌視覺</button>
+
+            <button class="tab-btn" onclick="switchTab('tab-text', this)">純文字輸出</button>
+
+        </div>
+
+
+
+        <div id="tab-outer" class="preview-content active">
+
+            <div class="outer-tablet">
+
+                <div style="width:100%; display:flex; flex-direction:column; align-items:center; height:100%;">
+
+                    <div class="tanghao" id="prev-tanghao"></div>
+
+                    <div class="tablet-body">
+
+                        <div class="col-right" id="prev-worship"></div>
+
+                        <div class="col-middle" id="prev-outermiddle"></div>
+
+                        <div class="col-left" id="prev-year"></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div id="tab-inner" class="preview-content">
+
+            <div id="prev-inner-container"></div>
+
+        </div>
+
+
+
+        <div id="tab-text" class="preview-content" style="flex-direction: column;">
+
+            <textarea id="text-output" readonly></textarea>
+
+            <button class="btn-copy" onclick="copyText()">複製全文至剪貼簿</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
 <script>
+
     let innerSheets = [
+
         {
+
             type: 'single',
+
             persons: [{ name: "陳文華", main: "顯考陳公諱文華官一位神位", birth: "生於民國三十年二月十五日受生", death: "卒于民國一一二年八月十日別逝" }]
+
         }
+
     ];
 
+
+
     function init() {
+
         document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
+
         document.getElementById('surname').addEventListener('input', handleOuterTypeChange);
+
         document.querySelectorAll('.settings-panel input, .settings-panel select').forEach(el => {
+
             el.addEventListener('input', updateAll);
+
         });
+
         renderInnerSheets();
+
         updateAll();
+
     }
+
+
 
     function toggleDisplayMode() {
+
         const mode = document.getElementById('displayMode').value;
+
         const outerSection = document.getElementById('outer-settings-section');
+
         const outerTabBtn = document.getElementById('btn-tab-outer');
 
+
+
         if (mode === 'innerOnly') {
+
             outerSection.classList.add('mode-hidden');
+
             outerTabBtn.classList.add('hidden');
+
             if (outerTabBtn.classList.contains('active')) {
+
                 switchTab('tab-inner', document.getElementById('btn-tab-inner'));
+
             }
+
         } else {
+
             outerSection.classList.remove('mode-hidden');
+
             outerTabBtn.classList.remove('hidden');
+
         }
+
         updateAll();
+
     }
+
+
 
     function getFortune(text) {
+
         const cleanStr = text.replace(/[\s\p{P}]/gu, '');
+
         const len = cleanStr.length;
+
         if (len === 0) return '';
+
         const fortunes = ['苦', '生', '老', '病', '死'];
+
         return `${len}字(${fortunes[len % 5]})`;
+
     }
+
+
 
     function updateFortuneLabel(elementId, text, targetFortunes) {
+
         const el = document.getElementById(elementId);
+
         if (!el) return;
+
         const fortuneStr = getFortune(text);
+
         el.textContent = fortuneStr;
+
         const isLucky = targetFortunes.some(t => fortuneStr.includes(t));
+
         el.style.color = isLucky ? '#4CAF50' : '#d32f2f';
+
     }
+
+
 
     function handleOuterTypeChange() {
+
         const type = document.getElementById('outerType').value;
+
         const surname = document.getElementById('surname').value || '〇';
+
         const middleInput = document.getElementById('outerMiddle');
+
         if (type === 'ancestor') middleInput.value = `堂上${surname}姓歷代祖考妣之神位`;
+
         else if (type === 'male') middleInput.value = `顯考${surname}公諱〇〇官一位神位`;
+
         else if (type === 'female') middleInput.value = `顯妣${surname}門〇氏〇〇娘之神位`;
+
         updateAll();
+
     }
+
+
 
     function addInnerSheet() {
+
         innerSheets.push({
+
             type: 'single',
+
             persons: [{ name: "", main: "", birth: "生於", death: "卒于" }]
+
         });
+
         renderInnerSheets();
+
         updateAll();
+
     }
+
+
 
     function deleteSheet(idx) {
+
         if (innerSheets.length <= 1) return alert("至少需保留一片內牌。");
+
         innerSheets.splice(idx, 1);
+
         renderInnerSheets();
+
         updateAll();
+
     }
+
+
 
     function changeSheetType(idx, type) {
+
         const count = type === 'single' ? 1 : (type === 'couple' ? 2 : 3);
+
         const newPersons = [];
+
         for(let i=0; i<count; i++) {
+
             newPersons.push(innerSheets[idx].persons[i] || { name: "", main: "", birth: "生於", death: "卒于" });
+
         }
+
         innerSheets[idx].type = type;
+
         innerSheets[idx].persons = newPersons;
+
         renderInnerSheets();
+
         updateAll();
+
     }
+
+
 
     function syncInnerData(sheetIdx, personIdx, field, val) {
+
         innerSheets[sheetIdx].persons[personIdx][field] = val;
+
         updateAll();
+
     }
+
+
 
     function renderInnerSheets() {
+
         const container = document.getElementById('inner-sheets-container');
+
         container.innerHTML = '';
 
+
+
         innerSheets.forEach((sheet, sIdx) => {
+
             let personsHtml = '';
+
             sheet.persons.forEach((p, pIdx) => {
+
                 personsHtml += `
+
                     <div class="inner-person-sub-block">
+
                         <label>成員 ${pIdx + 1} 姓名</label>
+
                         <input type="text" value="${p.name}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'name', this.value)">
+
                         <label>主文 (中) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-m"></span></label>
+
                         <input type="text" value="${p.main}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'main', this.value)">
+
                         <label>生日 (右) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-b"></span></label>
+
                         <input type="text" value="${p.birth}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'birth', this.value)">
+
                         <label>忌日 (左) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-d"></span></label>
+
                         <input type="text" value="${p.death}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'death', this.value)">
+
                     </div>`;
+
             });
+
+
 
             container.innerHTML += `
+
                 <div class="inner-sheet-block">
+
                     <button class="btn-delete-sheet" onclick="deleteSheet(${sIdx})">刪除此片</button>
+
                     <div class="form-group">
+
                         <label>木片 ${sIdx + 1} 格式</label>
+
                         <select onchange="changeSheetType(${sIdx}, this.value)">
+
                             <option value="single" ${sheet.type==='single'?'selected':''}>單人</option>
+
                             <option value="couple" ${sheet.type==='couple'?'selected':''}>夫妻</option>
+
                             <option value="trio" ${sheet.type==='trio'?'selected':''}>三人</option>
+
                         </select>
+
                     </div>
+
                     ${personsHtml}
+
                 </div>`;
+
         });
+
     }
+
+
 
     function updateAll() {
+
         const mode = document.getElementById('displayMode').value;
+
         const tabletId = document.getElementById('tabletId').value;
+
         const entryDate = document.getElementById('entryDate').value;
+
         
+
         let fullText = `牌位編號：${tabletId}\n入牌日期：${entryDate}\n`;
 
+
+
         // 處理外牌
+
         if (mode === 'both') {
+
             const tanghaoOrig = document.getElementById('tanghao').value;
+
             const tanghaoReversed = tanghaoOrig.split('').reverse().join('');
+
             const year = document.getElementById('year').value;
+
             const outerMiddle = document.getElementById('outerMiddle').value;
+
             const worship = document.getElementById('worship').value;
 
+
+
             updateFortuneLabel('ft-tanghao', tanghaoOrig, ['老']);
+
             updateFortuneLabel('ft-year', year, ['生']);
+
             updateFortuneLabel('ft-outermiddle', outerMiddle, ['老']);
+
             updateFortuneLabel('ft-worship', worship, ['生']);
 
+
+
             document.getElementById('prev-tanghao').innerText = tanghaoReversed;
+
             document.getElementById('prev-year').innerText = year;
+
             document.getElementById('prev-outermiddle').innerText = outerMiddle;
+
             document.getElementById('prev-worship').innerText = worship;
 
-            // 修改此處：移除右、中、左標籤，直接輸出內容
+
+
             fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${worship}\n${outerMiddle}\n${year}\n`;
+
         }
 
+
+
         // 處理內牌
+
         const innerPrevContainer = document.getElementById('prev-inner-container');
+
         innerPrevContainer.innerHTML = '';
+
         
+
         innerSheets.forEach((sheet, sIdx) => {
+
             const sheetDiv = document.createElement('div');
+
             sheetDiv.className = 'inner-tablet';
+
             let sheetText = `\n【內牌木片 ${sIdx + 1} - ${sheet.type}】\n`;
 
+
+
             sheet.persons.forEach((p, pIdx) => {
+
                 updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-m`, p.main, ['老', '生']);
+
                 updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-b`, p.birth, ['老', '生']);
+
                 updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-d`, p.death, ['老', '生']);
 
+
+
                 const col = document.createElement('div');
+
                 col.className = 'inner-person-col';
+
                 col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${p.main}</div><div class="inner-side">${p.birth}</div>`;
+
                 sheetDiv.prepend(col); 
 
+
+
                 sheetText += `成員${pIdx+1}(${p.name})：\n${p.birth}\n${p.main}\n${p.death}\n`;
+
             });
 
+
+
             innerPrevContainer.appendChild(sheetDiv);
+
             fullText += sheetText;
+
         });
 
+
+
         document.getElementById('text-output').value = fullText;
+
     }
+
+
 
     function switchTab(tabId, btn) {
+
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
         document.querySelectorAll('.preview-content').forEach(c => c.classList.remove('active'));
+
         btn.classList.add('active');
+
         document.getElementById(tabId).classList.add('active');
+
     }
+
+
 
     function copyText() {
+
         const area = document.getElementById('text-output');
+
         area.select();
+
         navigator.clipboard.writeText(area.value).then(() => alert("已複製全文"));
+
     }
 
+
+
     window.onload = init;
+
 </script>
 
+
+
 </body>
+
 </html>
