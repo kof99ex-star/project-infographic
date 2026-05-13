@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>神主牌位排字工具 - by瑋志</title>
-    <!-- 引入 SheetJS 用於導出 Excel -->
+    <!-- 引入 SheetJS 用於導出與讀取 Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -123,6 +123,15 @@
             font-size: 0.8rem;
         }
 
+        .import-section {
+            background: #f9f9f9;
+            border: 2px dashed #b37746;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
         .preview-panel { flex: 1; min-width: 400px; display: flex; flex-direction: column; gap: 20px; }
         .tabs { display: flex; gap: 10px; }
         .tab-btn {
@@ -188,8 +197,9 @@
 
         #text-output { width: 100%; height: 400px; padding: 20px; background: #fafafa; border: 1px solid #ddd; border-radius: 5px; font-family: "Courier New", monospace; font-size: 1.1rem; line-height: 1.8; resize: vertical; box-sizing: border-box; }
         .btn-copy { background: #4CAF50; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1rem; margin-top: 10px; width: 100%; font-weight: bold; }
-        .btn-save { background: #2196F3; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1rem; margin-top: 10px; width: 100%; font-weight: bold; }
-        .btn-excel { background: #E91E63; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1rem; margin-top: 10px; width: 100%; font-weight: bold; }
+        .btn-save { background: #2196F3; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        .btn-word { background: #0078d4; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        .btn-excel { background: #E91E63; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
 
         .mode-hidden { display: none !important; }
 
@@ -204,6 +214,11 @@
 
 <div class="container">
     <div class="settings-panel">
+        <div class="import-section">
+            <label style="color:#6b4423; display:block; margin-bottom:10px;">📂 讀取舊檔案 (僅限 .xlsx)</label>
+            <input type="file" id="uploadExcel" accept=".xlsx" style="font-size: 0.9rem;">
+        </div>
+
         <h2>管理資訊</h2>
         <div class="form-group">
             <label>顯示模式</label>
@@ -232,6 +247,7 @@
                         <option value="ancestor">歷代祖先牌位</option>
                         <option value="male">個人牌位(男)</option>
                         <option value="female">個人牌位(女)</option>
+                        <option value="custom">自定義內容</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -288,9 +304,10 @@
 
         <div id="tab-text" class="preview-content" style="flex-direction: column;">
             <textarea id="text-output" readonly></textarea>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button class="btn-save" onclick="saveAsTxt()">另存為 .TXT</button>
-                <button class="btn-excel" onclick="saveAsExcel()">另存為 .EXCEL</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <button class="btn-save" onclick="saveAsTxt()">存為 .TXT</button>
+                <button class="btn-word" onclick="saveAsWord()">存為 .WORD</button>
+                <button class="btn-excel" onclick="saveAsExcel()">存為 .EXCEL</button>
             </div>
             <button class="btn-copy" onclick="copyText()">複製全文至剪貼簿</button>
         </div>
@@ -308,6 +325,8 @@
     function init() {
         document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
         document.getElementById('surname').addEventListener('input', handleOuterTypeChange);
+        document.getElementById('uploadExcel').addEventListener('change', handleExcelUpload);
+        
         document.querySelectorAll('.settings-panel input, .settings-panel select').forEach(el => {
             el.addEventListener('input', updateAll);
         });
@@ -334,6 +353,7 @@
     }
 
     function getFortune(text) {
+        if (!text) return '';
         const cleanStr = text.replace(/[\s\p{P}]/gu, '');
         const len = cleanStr.length;
         if (len === 0) return '';
@@ -352,6 +372,7 @@
 
     function handleOuterTypeChange() {
         const type = document.getElementById('outerType').value;
+        if (type === 'custom') return; // 自定義模式不連動
         const surname = document.getElementById('surname').value || '〇';
         const middleInput = document.getElementById('outerMiddle');
         if (type === 'ancestor') middleInput.value = `堂上${surname}姓歷代祖考妣之神位`;
@@ -371,6 +392,7 @@
 
     function deleteSheet(idx) {
         if (innerSheets.length <= 1) return alert("至少需保留一片內牌。");
+        if (!confirm("確定要刪除這片內牌嗎？")) return;
         innerSheets.splice(idx, 1);
         renderInnerSheets();
         updateAll();
@@ -453,7 +475,7 @@
             document.getElementById('prev-outermiddle').innerText = outerMiddle;
             document.getElementById('prev-worship').innerText = worship;
 
-            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n右行：${worship}\n中行：${outerMiddle}\n左行：${year}\n`;
+            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${worship}\n${outerMiddle}\n${year}\n`;
         }
 
         const innerPrevContainer = document.getElementById('prev-inner-container');
@@ -474,7 +496,7 @@
                 col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${p.main}</div><div class="inner-side">${p.birth}</div>`;
                 sheetDiv.prepend(col); 
 
-                sheetText += `成員${pIdx+1}(${p.name})：\n右行：${p.birth}\n中行：${p.main}\n左行：${p.death}\n`;
+                sheetText += `成員${pIdx+1}(${p.name})：\n${p.birth}\n${p.main}\n${p.death}\n`;
             });
 
             innerPrevContainer.appendChild(sheetDiv);
@@ -497,6 +519,77 @@
         navigator.clipboard.writeText(area.value).then(() => alert("已複製全文"));
     }
 
+    function handleExcelUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const data = evt.target.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
+            try {
+                // 解析 基本資訊
+                document.getElementById('tabletId').value = rows[1][1] || "";
+                document.getElementById('entryDate').value = rows[2][1] || "";
+
+                // 搜尋 外牌 資料
+                let currentRow = 3;
+                let foundInner = false;
+                
+                // 重設內牌
+                innerSheets = [];
+
+                for (let i = 0; i < rows.length; i++) {
+                    const firstCell = String(rows[i][0] || "");
+                    
+                    if (firstCell.includes("【外牌部分】")) {
+                        document.getElementById('displayMode').value = "both";
+                        document.getElementById('tanghao').value = rows[i+2][1] || "";
+                        document.getElementById('worship').value = rows[i+3][1] || "";
+                        document.getElementById('outerMiddle').value = rows[i+4][1] || "";
+                        document.getElementById('year').value = rows[i+5][1] || "";
+                    }
+
+                    if (firstCell.includes("木片")) {
+                        const typeMatch = firstCell.match(/\((.*?)\)/);
+                        const type = typeMatch ? typeMatch[1] : "single";
+                        const personCount = (type === 'single' ? 1 : (type === 'couple' ? 2 : 3));
+                        
+                        let persons = [];
+                        for (let j = 1; j <= personCount; j++) {
+                            const pRow = rows[i + 1 + j];
+                            if (pRow) {
+                                persons.push({
+                                    name: pRow[1] || "",
+                                    birth: (pRow[2] || "").split(' [')[0],
+                                    main: (pRow[3] || "").split(' [')[0],
+                                    death: (pRow[4] || "").split(' [')[0]
+                                });
+                            }
+                        }
+                        innerSheets.push({ type, persons });
+                    }
+                }
+                
+                if (innerSheets.length === 0) {
+                    innerSheets = [{ type: 'single', persons: [{ name: "", main: "", birth: "生於", death: "卒于" }] }];
+                }
+
+                alert("資料讀取成功！");
+                toggleDisplayMode();
+                renderInnerSheets();
+                updateAll();
+            } catch (err) {
+                console.error(err);
+                alert("檔案格式不符，請確保上傳的是由本工具導出的 Excel 檔案。");
+            }
+        };
+        reader.readAsBinaryString(file);
+    }
+
     function saveAsTxt() {
         const text = document.getElementById('text-output').value;
         const tabletId = document.getElementById('tabletId').value || "未命名牌位";
@@ -512,57 +605,60 @@
         URL.revokeObjectURL(url);
     }
 
-    // 新增：另存為 Excel 功能
+    function saveAsWord() {
+        const text = document.getElementById('text-output').value;
+        const tabletId = document.getElementById('tabletId').value || "未命名";
+        const entryDate = document.getElementById('entryDate').value || "無日期";
+        const formattedText = text.replace(/\n/g, '<br>');
+        const content = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>Export Word</title></head>
+            <body style="font-family: 'MS Ungothic', '標楷體';">
+                <h2>神主牌位排字資料</h2>
+                <div style="font-size: 12pt; line-height: 1.5;">
+                    ${formattedText}
+                </div>
+            </body>
+            </html>
+        `;
+        const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${tabletId}_${entryDate}.doc`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+
     function saveAsExcel() {
         const tabletId = document.getElementById('tabletId').value || "未命名";
         const entryDate = document.getElementById('entryDate').value || "無日期";
+        let data = [["牌位資訊管理表"], ["牌位編號", tabletId], ["入牌日期", entryDate], []];
         
-        // 準備 Excel 資料格式
-        let data = [
-            ["牌位資訊管理表"],
-            ["牌位編號", tabletId],
-            ["入牌日期", entryDate],
-            [], // 空行
-        ];
-
-        // 處理外牌
         if (document.getElementById('displayMode').value === 'both') {
             data.push(["【外牌部分】"]);
             data.push(["位置", "內容", "吉凶判定"]);
             data.push(["堂號", document.getElementById('tanghao').value, getFortune(document.getElementById('tanghao').value)]);
-            data.push(["右行(奉祀人)", document.getElementById('worship').value, getFortune(document.getElementById('worship').value)]);
-            data.push(["中行(主文)", document.getElementById('outerMiddle').value, getFortune(document.getElementById('outerMiddle').value)]);
-            data.push(["左行(年份)", document.getElementById('year').value, getFortune(document.getElementById('year').value)]);
+            data.push(["奉祀人", document.getElementById('worship').value, getFortune(document.getElementById('worship').value)]);
+            data.push(["主文", document.getElementById('outerMiddle').value, getFortune(document.getElementById('outerMiddle').value)]);
+            data.push(["年份", document.getElementById('year').value, getFortune(document.getElementById('year').value)]);
             data.push([]);
         }
-
-        // 處理內牌
+        
         data.push(["【內牌木片資料】"]);
         innerSheets.forEach((sheet, sIdx) => {
-            data.push([`木片 ${sIdx + 1} (${sheet.type === 'single' ? '單人' : sheet.type === 'couple' ? '夫妻' : '三人'})`]);
-            data.push(["成員", "姓名", "右行(生日)", "中行(主文)", "左行(忌日)"]);
+            data.push([`木片 ${sIdx + 1} (${sheet.type})`]);
+            data.push(["成員", "姓名", "生日", "主文", "忌日"]);
             sheet.persons.forEach((p, pIdx) => {
-                data.push([
-                    `成員 ${pIdx + 1}`,
-                    p.name,
-                    `${p.birth} [${getFortune(p.birth)}]`,
-                    `${p.main} [${getFortune(p.main)}]`,
-                    `${p.death} [${getFortune(p.death)}]`
-                ]);
+                data.push([`成員 ${pIdx + 1}`, p.name, `${p.birth} [${getFortune(p.birth)}]`, `${p.main} [${getFortune(p.main)}]`, `${p.death} [${getFortune(p.death)}]`]);
             });
             data.push([]);
         });
-
-        // 建立活頁簿
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(data);
-
-        // 設定欄寬
-        ws['!cols'] = [{wch: 15}, {wch: 25}, {wch: 30}, {wch: 30}, {wch: 30}];
-
         XLSX.utils.book_append_sheet(wb, ws, "牌位排字資料");
-
-        // 下載檔案
         XLSX.writeFile(wb, `${tabletId}_${entryDate}.xlsx`);
     }
 
