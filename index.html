@@ -1,4 +1,4 @@
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -241,6 +241,10 @@ html_content = """<!DOCTYPE html>
                 <input type="text" id="entryDate" value="未定">
             </div>
         </div>
+        <div class="form-group">
+            <label>服務人員 / 申請人</label>
+            <input type="text" id="staffName" placeholder="請輸入姓名">
+        </div>
         
         <div class="form-group">
             <label>備註事項</label>
@@ -363,7 +367,7 @@ html_content = """<!DOCTYPE html>
 
     function getFortune(text) {
         if (!text) return '';
-        const cleanStr = text.replace(/[\\s\\p{P}]/gu, '');
+        const cleanStr = text.replace(/[\s\p{P}]/gu, '');
         const len = cleanStr.length;
         if (len === 0) return '';
         const fortunes = ['苦', '生', '老', '病', '死'];
@@ -381,7 +385,7 @@ html_content = """<!DOCTYPE html>
 
     function handleOuterTypeChange() {
         const type = document.getElementById('outerType').value;
-        if (type === 'custom') return; // 自定義模式不連動
+        if (type === 'custom') return; 
         const surname = document.getElementById('surname').value || '〇';
         const middleInput = document.getElementById('outerMiddle');
         if (type === 'ancestor') middleInput.value = `堂上${surname}姓歷代祖考妣之神位`;
@@ -464,9 +468,10 @@ html_content = """<!DOCTYPE html>
         const mode = document.getElementById('displayMode').value;
         const tabletId = document.getElementById('tabletId').value;
         const entryDate = document.getElementById('entryDate').value;
+        const staffName = document.getElementById('staffName').value;
         const notes = document.getElementById('tabletNotes').value;
         
-        let fullText = `牌位編號：${tabletId}\\n入牌日期：${entryDate}\\n備註事項：${notes}\\n`;
+        let fullText = `牌位編號：${tabletId}\n入牌日期：${entryDate}\n服務人員：${staffName}\n備註事項：${notes}\n`;
 
         if (mode === 'both') {
             const tanghaoOrig = document.getElementById('tanghao').value;
@@ -485,7 +490,7 @@ html_content = """<!DOCTYPE html>
             document.getElementById('prev-outermiddle').innerText = outerMiddle;
             document.getElementById('prev-worship').innerText = worship;
 
-            fullText += `\\n【外牌】\\n堂號：${tanghaoOrig}\\n${worship}\\n${outerMiddle}\\n${year}\\n`;
+            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${worship}\n${outerMiddle}\n${year}\n`;
         }
 
         const innerPrevContainer = document.getElementById('prev-inner-container');
@@ -494,7 +499,7 @@ html_content = """<!DOCTYPE html>
         innerSheets.forEach((sheet, sIdx) => {
             const sheetDiv = document.createElement('div');
             sheetDiv.className = 'inner-tablet';
-            let sheetText = `\\n【內牌木片 ${sIdx + 1} - ${sheet.type}】\\n`;
+            let sheetText = `\n【內牌木片 ${sIdx + 1} - ${sheet.type}】\n`;
 
             sheet.persons.forEach((p, pIdx) => {
                 updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-m`, p.main, ['老', '生']);
@@ -506,7 +511,7 @@ html_content = """<!DOCTYPE html>
                 col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${p.main}</div><div class="inner-side">${p.birth}</div>`;
                 sheetDiv.prepend(col); 
 
-                sheetText += `成員${pIdx+1}(${p.name})：\\n${p.birth}\\n${p.main}\\n${p.death}\\n`;
+                sheetText += `成員${pIdx+1}(${p.name})：\n${p.birth}\n${p.main}\n${p.death}\n`;
             });
 
             innerPrevContainer.appendChild(sheetDiv);
@@ -541,12 +546,11 @@ html_content = """<!DOCTYPE html>
             const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
 
             try {
-                // 解析 基本資訊
                 document.getElementById('tabletId').value = rows[1][1] || "";
                 document.getElementById('entryDate').value = rows[2][1] || "";
-                document.getElementById('tabletNotes').value = rows[3][1] || "";
+                document.getElementById('staffName').value = rows[3][1] || "";
+                document.getElementById('tabletNotes').value = rows[4][1] || "";
 
-                // 重設內牌
                 innerSheets = [];
 
                 for (let i = 0; i < rows.length; i++) {
@@ -561,7 +565,7 @@ html_content = """<!DOCTYPE html>
                     }
 
                     if (firstCell.includes("木片")) {
-                        const typeMatch = firstCell.match(/\\((.*?)\\)/);
+                        const typeMatch = firstCell.match(/\((.*?)\)/);
                         const type = typeMatch ? typeMatch[1] : "single";
                         const personCount = (type === 'single' ? 1 : (type === 'couple' ? 2 : 3));
                         
@@ -616,7 +620,7 @@ html_content = """<!DOCTYPE html>
         const text = document.getElementById('text-output').value;
         const tabletId = document.getElementById('tabletId').value || "未命名";
         const entryDate = document.getElementById('entryDate').value || "無日期";
-        const formattedText = text.replace(/\\n/g, '<br>');
+        const formattedText = text.replace(/\n/g, '<br>');
         const content = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head><meta charset='utf-8'><title>Export Word</title></head>
@@ -628,7 +632,7 @@ html_content = """<!DOCTYPE html>
             </body>
             </html>
         `;
-        const blob = new Blob(['\\ufeff', content], { type: 'application/msword' });
+        const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -640,8 +644,9 @@ html_content = """<!DOCTYPE html>
     function saveAsExcel() {
         const tabletId = document.getElementById('tabletId').value || "未命名";
         const entryDate = document.getElementById('entryDate').value || "無日期";
+        const staffName = document.getElementById('staffName').value || "";
         const notes = document.getElementById('tabletNotes').value || "";
-        let data = [["牌位資訊管理表"], ["牌位編號", tabletId], ["入牌日期", entryDate], ["備註事項", notes], []];
+        let data = [["牌位資訊管理表"], ["牌位編號", tabletId], ["入牌日期", entryDate], ["服務人員", staffName], ["備註事項", notes], []];
         
         if (document.getElementById('displayMode').value === 'both') {
             data.push(["【外牌部分】"]);
@@ -672,7 +677,4 @@ html_content = """<!DOCTYPE html>
 </script>
 
 </body>
-</html>"""
-
-with open("ancestor_tablet_tool.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
+</html>
