@@ -282,7 +282,7 @@
             </div>
             <div class="form-group">
                 <label>年份 (左行) <span class="fortune-tag" id="ft-year"></span></label>
-                <input type="text" id="year" value="歲次甲辰年立">
+                <input type="text" id="year" value="歲次丙午年立">
             </div>
         </div>
 
@@ -490,7 +490,8 @@
             document.getElementById('prev-outermiddle').innerText = outerMiddle;
             document.getElementById('prev-worship').innerText = worship;
 
-            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${worship}\n${outerMiddle}\n${year}\n`;
+            // 這裡已修改輸出順序：堂號 > 年份(左) > 主文(中) > 奉祀人(右)
+            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${year}\n${outerMiddle}\n${worship}\n`;
         }
 
         const innerPrevContainer = document.getElementById('prev-inner-container');
@@ -667,7 +668,7 @@
             });
             data.push([]);
         });
-        const wb = XLSX.utils.book_new();
+        const wb = XLSX.book_new();
         const ws = XLSX.utils.aoa_to_sheet(data);
         XLSX.utils.book_append_sheet(wb, ws, "牌位排字資料");
         XLSX.writeFile(wb, `${tabletId}_${entryDate}.xlsx`);
