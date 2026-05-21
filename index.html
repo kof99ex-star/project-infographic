@@ -265,23 +265,23 @@
                 </div>
                 <div class="form-group">
                     <label>姓氏</label>
-                    <input type="text" id="surname" value="陳">
+                    <input type="text" id="surname" value="Ｏ">
                 </div>
             </div>
             <div class="form-group">
                 <label>堂號 (橫批) <span class="fortune-tag" id="ft-tanghao"></span></label>
-                <input type="text" id="tanghao" value="穎　川">
+                <input type="text" id="tanghao" value="佛　恩">
             </div>
             <div class="form-group">
                 <label>外牌主文 (中行) <span class="fortune-tag" id="ft-outermiddle"></span></label>
-                <input type="text" id="outerMiddle" value="堂上陳姓歷代祖考妣之神位">
+                <input type="text" id="outerMiddle" value="堂上Ｏ姓歷代祖考妣之神位">
             </div>
             <div class="form-group">
                 <label>奉祀人 (右行) <span class="fortune-tag" id="ft-worship"></span></label>
                 <input type="text" id="worship" value="陽上子孫奉祀">
             </div>
             <div class="form-group">
-                <label>年份 (左行) <span class="fortune-tag" id="ft-year"></span></label>
+                <label>歲次 (左行) <span class="fortune-tag" id="ft-year"></span></label>
                 <input type="text" id="year" value="歲次丙午年立">
             </div>
         </div>
@@ -318,9 +318,9 @@
         <div id="tab-text" class="preview-content" style="flex-direction: column;">
             <textarea id="text-output" readonly></textarea>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
-                <button class="btn-save" onclick="saveAsTxt()">存為 .TXT</button>
-                <button class="btn-word" onclick="saveAsWord()">存為 .WORD</button>
-                <button class="btn-excel" onclick="saveAsExcel()">存為 .EXCEL</button>
+                <button class="btn-save" onclick="saveAsTxt()">存為 .txt</button>
+                <button class="btn-word" onclick="saveAsWord()">存為 .docx</button>
+                <button class="btn-excel" onclick="saveAsExcel()">存為 .xlsx</button>
             </div>
             <button class="btn-copy" onclick="copyText()">複製全文至剪貼簿</button>
         </div>
@@ -331,7 +331,7 @@
     let innerSheets = [
         {
             type: 'single',
-            persons: [{ name: "陳文華", main: "顯考陳公諱文華官一位神位", birth: "生於民國三十年二月十五日受生", death: "卒于民國一一二年八月十日別逝" }]
+            persons: [{ name: " ", main: "顯考陳公諱文華官一位神位", birth: "生於民國三十年二月十五日吉時受生", death: "卒于民國一一二年八月十日吉時別逝" }]
         }
     ];
 
@@ -490,8 +490,7 @@
             document.getElementById('prev-outermiddle').innerText = outerMiddle;
             document.getElementById('prev-worship').innerText = worship;
 
-            // 這裡已修改輸出順序：堂號 > 年份(左) > 主文(中) > 奉祀人(右)
-            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${year}\n${outerMiddle}\n${worship}\n`;
+            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${worship}\n${outerMiddle}\n${year}\n`;
         }
 
         const innerPrevContainer = document.getElementById('prev-inner-container');
@@ -653,9 +652,9 @@
             data.push(["【外牌部分】"]);
             data.push(["位置", "內容", "吉凶判定"]);
             data.push(["堂號", document.getElementById('tanghao').value, getFortune(document.getElementById('tanghao').value)]);
-            data.push(["奉祀人", document.getElementById('worship').value, getFortune(document.getElementById('worship').value)]);
+            data.push(["歲次", document.getElementById('year').value, getFortune(document.getElementById('year').value)]);
             data.push(["主文", document.getElementById('outerMiddle').value, getFortune(document.getElementById('outerMiddle').value)]);
-            data.push(["年份", document.getElementById('year').value, getFortune(document.getElementById('year').value)]);
+            data.push(["奉祀人", document.getElementById('worship').value, getFortune(document.getElementById('worship').value)]);
             data.push([]);
         }
         
@@ -668,7 +667,7 @@
             });
             data.push([]);
         });
-        const wb = XLSX.book_new();
+        const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(data);
         XLSX.utils.book_append_sheet(wb, ws, "牌位排字資料");
         XLSX.writeFile(wb, `${tabletId}_${entryDate}.xlsx`);
