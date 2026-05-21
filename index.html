@@ -126,6 +126,19 @@
             cursor: pointer;
             font-size: 0.8rem;
         }
+        
+        .btn-clear-storage {
+            background: #757575;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            width: 100%;
+        }
+        .btn-clear-storage:hover { background: #555; }
 
         .import-section {
             background: #f9f9f9;
@@ -221,6 +234,7 @@
         <div class="import-section">
             <label style="color:#6b4423; display:block; margin-bottom:10px;">📂 讀取舊檔案 (僅限 .xlsx)</label>
             <input type="file" id="uploadExcel" accept=".xlsx" style="font-size: 0.9rem;">
+            <button class="btn-clear-storage" onclick="clearLocalStorage()">🧹 清除暫存並重置</button>
         </div>
 
         <h2>管理資訊</h2>
@@ -328,6 +342,8 @@
 </div>
 
 <script>
+    const STORAGE_KEY = 'tablet_data_v1';
+    
     let innerSheets = [
         {
             type: 'single',
@@ -336,16 +352,80 @@
     ];
 
     function init() {
+        // 1. 綁定事件
         document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
         document.getElementById('surname').addEventListener('input', handleOuterTypeChange);
         document.getElementById('uploadExcel').addEventListener('change', handleExcelUpload);
         
         document.querySelectorAll('.settings-panel input, .settings-panel select, .settings-panel textarea').forEach(el => {
             el.addEventListener('input', updateAll);
+            el.addEventListener('change', updateAll);
         });
+
+        // 2. 嘗試從 localStorage 讀取暫存
+        loadFromLocalStorage();
+
+        // 3. 根據讀取到的資料初始化畫面
+        toggleDisplayMode();
         renderInnerSheets();
         updateAll();
     }
+
+    // --- LocalStorage 自動儲存與讀取功能 ---
+    function saveToLocalStorage() {
+        const data = {
+            displayMode: document.getElementById('displayMode').value,
+            tabletId: document.getElementById('tabletId').value,
+            entryDate: document.getElementById('entryDate').value,
+            staffName: document.getElementById('staffName').value,
+            tabletNotes: document.getElementById('tabletNotes').value,
+            outerType: document.getElementById('outerType').value,
+            surname: document.getElementById('surname').value,
+            tanghao: document.getElementById('tanghao').value,
+            outerMiddle: document.getElementById('outerMiddle').value,
+            worship: document.getElementById('worship').value,
+            year: document.getElementById('year').value,
+            innerSheets: innerSheets
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function loadFromLocalStorage() {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                
+                // 還原基本資料與外牌設定
+                if (data.displayMode) document.getElementById('displayMode').value = data.displayMode;
+                if (data.tabletId) document.getElementById('tabletId').value = data.tabletId;
+                if (data.entryDate) document.getElementById('entryDate').value = data.entryDate;
+                if (data.staffName) document.getElementById('staffName').value = data.staffName;
+                if (data.tabletNotes) document.getElementById('tabletNotes').value = data.tabletNotes;
+                if (data.outerType) document.getElementById('outerType').value = data.outerType;
+                if (data.surname) document.getElementById('surname').value = data.surname;
+                if (data.tanghao) document.getElementById('tanghao').value = data.tanghao;
+                if (data.outerMiddle) document.getElementById('outerMiddle').value = data.outerMiddle;
+                if (data.worship) document.getElementById('worship').value = data.worship;
+                if (data.year) document.getElementById('year').value = data.year;
+                
+                // 還原內牌陣列
+                if (data.innerSheets && Array.isArray(data.innerSheets)) {
+                    innerSheets = data.innerSheets;
+                }
+            } catch (error) {
+                console.error("讀取暫存資料失敗:", error);
+            }
+        }
+    }
+
+    function clearLocalStorage() {
+        if (confirm("確定要清除目前所有的編輯內容並恢復預設嗎？(將無法復原)")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload(); // 重新載入網頁以重置所有變數
+        }
+    }
+    // ----------------------------------------
 
     function toggleDisplayMode() {
         const mode = document.getElementById('displayMode').value;
@@ -425,7 +505,7 @@
 
     function syncInnerData(sheetIdx, personIdx, field, val) {
         innerSheets[sheetIdx].persons[personIdx][field] = val;
-        updateAll();
+        updateAll(); // updateAll 中會呼叫 saveToLocalStorage
     }
 
     function renderInnerSheets() {
@@ -519,6 +599,9 @@
         });
 
         document.getElementById('text-output').value = fullText;
+
+        // 每次更新畫面完畢後，就自動把目前的狀態存進 LocalStorage
+        saveToLocalStorage();
     }
 
     function switchTab(tabId, btn) {
