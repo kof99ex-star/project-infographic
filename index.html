@@ -347,12 +347,12 @@
     let innerSheets = [
         {
             type: 'single',
-            persons: [{ name: " ", main: "顯考陳公諱文華官一位神位", birth: "生於民國三十年二月十五日吉時受生", death: "卒于民國一一二年八月十日吉時別逝" }]
+            persons: [{ name: " ", main: "顯考陳公諱文華官一位神主", birth: "生於民國三十年二月十五日吉時受生", death: "卒于民國一一二年八月十日吉時別逝" }]
         }
     ];
 
+    // 初始化
     function init() {
-        // 1. 綁定事件
         document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
         document.getElementById('surname').addEventListener('input', handleOuterTypeChange);
         document.getElementById('uploadExcel').addEventListener('change', handleExcelUpload);
@@ -362,10 +362,8 @@
             el.addEventListener('change', updateAll);
         });
 
-        // 2. 嘗試從 localStorage 讀取暫存
         loadFromLocalStorage();
 
-        // 3. 根據讀取到的資料初始化畫面
         toggleDisplayMode();
         renderInnerSheets();
         updateAll();
@@ -396,7 +394,6 @@
             try {
                 const data = JSON.parse(savedData);
                 
-                // 還原基本資料與外牌設定
                 if (data.displayMode) document.getElementById('displayMode').value = data.displayMode;
                 if (data.tabletId) document.getElementById('tabletId').value = data.tabletId;
                 if (data.entryDate) document.getElementById('entryDate').value = data.entryDate;
@@ -409,7 +406,6 @@
                 if (data.worship) document.getElementById('worship').value = data.worship;
                 if (data.year) document.getElementById('year').value = data.year;
                 
-                // 還原內牌陣列
                 if (data.innerSheets && Array.isArray(data.innerSheets)) {
                     innerSheets = data.innerSheets;
                 }
@@ -422,7 +418,7 @@
     function clearLocalStorage() {
         if (confirm("確定要清除目前所有的編輯內容並恢復預設嗎？(將無法復原)")) {
             localStorage.removeItem(STORAGE_KEY);
-            location.reload(); // 重新載入網頁以重置所有變數
+            location.reload();
         }
     }
     // ----------------------------------------
@@ -469,8 +465,8 @@
         const surname = document.getElementById('surname').value || '〇';
         const middleInput = document.getElementById('outerMiddle');
         if (type === 'ancestor') middleInput.value = `堂上${surname}姓歷代祖考妣之神位`;
-        else if (type === 'male') middleInput.value = `顯考${surname}公諱〇〇官一位神位`;
-        else if (type === 'female') middleInput.value = `顯妣${surname}門〇氏〇〇娘之神位`;
+        else if (type === 'male') middleInput.value = `顯考${surname}公諱〇〇官一位神主`;
+        else if (type === 'female') middleInput.value = `顯妣${surname}門〇氏〇〇娘之神主`;
         updateAll();
     }
 
@@ -505,7 +501,7 @@
 
     function syncInnerData(sheetIdx, personIdx, field, val) {
         innerSheets[sheetIdx].persons[personIdx][field] = val;
-        updateAll(); // updateAll 中會呼叫 saveToLocalStorage
+        updateAll();
     }
 
     function renderInnerSheets() {
@@ -513,9 +509,9 @@
         container.innerHTML = '';
 
         innerSheets.forEach((sheet, sIdx) => {
-            let personsHtml = '';
+            let pHtml = '';
             sheet.persons.forEach((p, pIdx) => {
-                personsHtml += `
+                pHtml += `
                     <div class="inner-person-sub-block">
                         <label>成員 ${pIdx + 1} 姓名</label>
                         <input type="text" value="${p.name}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'name', this.value)">
@@ -523,7 +519,7 @@
                         <input type="text" value="${p.main}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'main', this.value)">
                         <label>生日 (右) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-b"></span></label>
                         <input type="text" value="${p.birth}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'birth', this.value)">
-                        <label>忌日 (左) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-d"></span></label>
+                        <label>忌日 (left) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-d"></span></label>
                         <input type="text" value="${p.death}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'death', this.value)">
                     </div>`;
             });
@@ -539,7 +535,7 @@
                             <option value="trio" ${sheet.type==='trio'?'selected':''}>三人</option>
                         </select>
                     </div>
-                    ${personsHtml}
+                    ${pHtml}
                 </div>`;
         });
     }
@@ -570,7 +566,8 @@
             document.getElementById('prev-outermiddle').innerText = outerMiddle;
             document.getElementById('prev-worship').innerText = worship;
 
-            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${worship}\n${outerMiddle}\n${year}\n`;
+            // 調整純文字輸出的顯示順序：歲次 -> 主文 -> 奉祀人
+            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${year}\n${outerMiddle}\n${worship}\n`;
         }
 
         const innerPrevContainer = document.getElementById('prev-inner-container');
@@ -600,7 +597,6 @@
 
         document.getElementById('text-output').value = fullText;
 
-        // 每次更新畫面完畢後，就自動把目前的狀態存進 LocalStorage
         saveToLocalStorage();
     }
 
