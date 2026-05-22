@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位排字工具 - by瑋志</title>
+    <title>神主牌位排字工具 - by瑋志 (第20版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -277,9 +277,19 @@
                         <option value="custom">自定義內容</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>姓氏</label>
+            </div>
+            <div class="form-row">
+                <div class="form-group field-surname">
+                    <label id="lbl-surname">姓氏</label>
                     <input type="text" id="surname" value="Ｏ">
+                </div>
+                <div class="form-group field-maiden" style="display:none;">
+                    <label>氏 (本家姓)</label>
+                    <input type="text" id="maidenName" value="Ｏ">
+                </div>
+                <div class="form-group field-given" style="display:none;">
+                    <label>名字</label>
+                    <input type="text" id="givenName" value="〇〇">
                 </div>
             </div>
             <div class="form-group">
@@ -353,11 +363,18 @@
 
     // 初始化
     function init() {
+        // 設定外牌選項的監聽器
         document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
-        document.getElementById('surname').addEventListener('input', handleOuterTypeChange);
+        
+        // 姓名欄位連動主文的監聽器
+        document.getElementById('surname').addEventListener('input', () => { updateOuterMiddleText(); updateAll(); });
+        document.getElementById('maidenName').addEventListener('input', () => { updateOuterMiddleText(); updateAll(); });
+        document.getElementById('givenName').addEventListener('input', () => { updateOuterMiddleText(); updateAll(); });
+        
         document.getElementById('uploadExcel').addEventListener('change', handleExcelUpload);
         
-        document.querySelectorAll('.settings-panel input, .settings-panel select, .settings-panel textarea').forEach(el => {
+        // 其他所有輸入欄位觸發更新
+        document.querySelectorAll('.settings-panel input:not(#surname):not(#maidenName):not(#givenName), .settings-panel select:not(#outerType), .settings-panel textarea').forEach(el => {
             el.addEventListener('input', updateAll);
             el.addEventListener('change', updateAll);
         });
@@ -365,6 +382,7 @@
         loadFromLocalStorage();
 
         toggleDisplayMode();
+        updateOuterVisibility(); // 初始化時設定正確的欄位顯示
         renderInnerSheets();
         updateAll();
     }
@@ -379,6 +397,8 @@
             tabletNotes: document.getElementById('tabletNotes').value,
             outerType: document.getElementById('outerType').value,
             surname: document.getElementById('surname').value,
+            maidenName: document.getElementById('maidenName').value,
+            givenName: document.getElementById('givenName').value,
             tanghao: document.getElementById('tanghao').value,
             outerMiddle: document.getElementById('outerMiddle').value,
             worship: document.getElementById('worship').value,
@@ -401,6 +421,8 @@
                 if (data.tabletNotes) document.getElementById('tabletNotes').value = data.tabletNotes;
                 if (data.outerType) document.getElementById('outerType').value = data.outerType;
                 if (data.surname) document.getElementById('surname').value = data.surname;
+                if (data.maidenName) document.getElementById('maidenName').value = data.maidenName;
+                if (data.givenName) document.getElementById('givenName').value = data.givenName;
                 if (data.tanghao) document.getElementById('tanghao').value = data.tanghao;
                 if (data.outerMiddle) document.getElementById('outerMiddle').value = data.outerMiddle;
                 if (data.worship) document.getElementById('worship').value = data.worship;
@@ -459,14 +481,57 @@
         el.style.color = isLucky ? '#4CAF50' : '#d32f2f';
     }
 
-    function handleOuterTypeChange() {
+    // 更新外牌輸入欄位的顯示狀態 (基於牌位類型)
+    function updateOuterVisibility() {
+        const type = document.getElementById('outerType').value;
+        const maidenField = document.querySelector('.field-maiden');
+        const givenField = document.querySelector('.field-given');
+        const lblSurname = document.getElementById('lbl-surname');
+
+        if (type === 'ancestor') {
+            maidenField.style.display = 'none';
+            givenField.style.display = 'none';
+            lblSurname.textContent = '姓氏';
+        } else if (type === 'male') {
+            maidenField.style.display = 'none';
+            givenField.style.display = 'block';
+            lblSurname.textContent = '姓氏';
+        } else if (type === 'female') {
+            maidenField.style.display = 'block';
+            givenField.style.display = 'block';
+            lblSurname.textContent = '夫家姓 (無則留空)';
+        } else {
+            maidenField.style.display = 'none';
+            givenField.style.display = 'none';
+            lblSurname.textContent = '姓氏';
+        }
+    }
+
+    // 自動組成中行主文
+    function updateOuterMiddleText() {
         const type = document.getElementById('outerType').value;
         if (type === 'custom') return; 
-        const surname = document.getElementById('surname').value || '〇';
+        
+        const surname = document.getElementById('surname').value.trim();
+        const maidenName = document.getElementById('maidenName').value.trim() || 'Ｏ';
+        const givenName = document.getElementById('givenName').value.trim() || '〇〇';
         const middleInput = document.getElementById('outerMiddle');
-        if (type === 'ancestor') middleInput.value = `堂上${surname}姓歷代祖考妣之神位`;
-        else if (type === 'male') middleInput.value = `顯考${surname}公諱〇〇官一位神主`;
-        else if (type === 'female') middleInput.value = `顯妣${surname}門〇氏〇〇娘之神主`;
+        
+        const safeSurname = surname || 'Ｏ';
+
+        if (type === 'ancestor') {
+            middleInput.value = `堂上${safeSurname}姓歷代祖考妣之神位`;
+        } else if (type === 'male') {
+            middleInput.value = `顯考${safeSurname}公諱${givenName}官一位神主`;
+        } else if (type === 'female') {
+            const husbandStr = surname ? `${surname}門` : '';
+            middleInput.value = `顯妣${husbandStr}${maidenName}氏${givenName}娘之神主`;
+        }
+    }
+
+    function handleOuterTypeChange() {
+        updateOuterVisibility();
+        updateOuterMiddleText();
         updateAll();
     }
 
@@ -519,7 +584,7 @@
                         <input type="text" value="${p.main}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'main', this.value)">
                         <label>生日 (右) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-b"></span></label>
                         <input type="text" value="${p.birth}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'birth', this.value)">
-                        <label>忌日 (left) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-d"></span></label>
+                        <label>忌日 (左) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-d"></span></label>
                         <input type="text" value="${p.death}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'death', this.value)">
                     </div>`;
             });
@@ -566,7 +631,6 @@
             document.getElementById('prev-outermiddle').innerText = outerMiddle;
             document.getElementById('prev-worship').innerText = worship;
 
-            // 調整純文字輸出的顯示順序：歲次 -> 主文 -> 奉祀人
             fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${year}\n${outerMiddle}\n${worship}\n`;
         }
 
@@ -610,7 +674,8 @@
     function copyText() {
         const area = document.getElementById('text-output');
         area.select();
-        navigator.clipboard.writeText(area.value).then(() => alert("已複製全文"));
+        document.execCommand('copy');
+        alert("已複製全文");
     }
 
     function handleExcelUpload(e) {
@@ -638,9 +703,9 @@
                     if (firstCell.includes("【外牌部分】")) {
                         document.getElementById('displayMode').value = "both";
                         document.getElementById('tanghao').value = rows[i+2][1] || "";
-                        document.getElementById('worship').value = rows[i+3][1] || "";
+                        document.getElementById('year').value = rows[i+3][1] || "";
                         document.getElementById('outerMiddle').value = rows[i+4][1] || "";
-                        document.getElementById('year').value = rows[i+5][1] || "";
+                        document.getElementById('worship').value = rows[i+5][1] || "";
                     }
 
                     if (firstCell.includes("木片")) {
@@ -670,6 +735,7 @@
 
                 alert("資料讀取成功！");
                 toggleDisplayMode();
+                updateOuterVisibility();
                 renderInnerSheets();
                 updateAll();
             } catch (err) {
