@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位排字工具 - by瑋志 (第21版)</title>
+    <title>神主牌位排字工具 - by瑋志 (第22版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -226,7 +226,7 @@
 <body>
 
 <div class="page-header">
-    <h1>神主牌位排字小工具</h1>
+    <h1>神主牌位助手</h1>
 </div>
 
 <div class="container">
@@ -367,7 +367,7 @@
         // 設定外牌選項的監聽器
         document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
         
-        // 姓名欄位連動主文及內牌的監聽器 (修改為 handleOuterInputChange)
+        // 姓名欄位連動主文及內牌的監聽器
         document.getElementById('surname').addEventListener('input', handleOuterInputChange);
         document.getElementById('maidenName').addEventListener('input', handleOuterInputChange);
         document.getElementById('givenName').addEventListener('input', handleOuterInputChange);
@@ -642,6 +642,12 @@
             }
         }
 
+        // 若切換為夫妻牌，初始化兩人的主文
+        if (type === 'couple') {
+            updateInnerMainText(idx, 0);
+            updateInnerMainText(idx, 1);
+        }
+
         renderInnerSheets();
         updateAll();
     }
@@ -651,12 +657,12 @@
         const sheet = innerSheets[sIdx];
         const p = sheet.persons[pIdx];
         
-        if (sheet.type === 'single-male') {
+        if (sheet.type === 'single-male' || (sheet.type === 'couple' && pIdx === 0)) {
             const safeSurname = p.surname ? p.surname.trim() : 'Ｏ';
             const safeGiven = p.givenName ? p.givenName.trim() : '〇〇';
             p.main = `顯考${safeSurname}公諱${safeGiven}官一位神主`;
             p.name = `${safeSurname}${safeGiven}`;
-        } else if (sheet.type === 'single-female') {
+        } else if (sheet.type === 'single-female' || (sheet.type === 'couple' && pIdx === 1)) {
             const safeSurname = p.surname ? p.surname.trim() : '';
             const safeMaiden = p.maidenName ? p.maidenName.trim() : 'Ｏ';
             const safeGiven = p.givenName ? p.givenName.trim() : '〇〇';
@@ -690,10 +696,12 @@
             let pHtml = '';
             sheet.persons.forEach((p, pIdx) => {
                 let nameInputs = '';
+                let headerLabel = sheet.type === 'couple' ? (pIdx === 0 ? `成員 ${pIdx + 1} (男)` : `成員 ${pIdx + 1} (女)`) : `成員 ${pIdx + 1}`;
                 
                 // 依據格式顯示對應姓名欄位
-                if (sheet.type === 'single-male') {
+                if (sheet.type === 'single-male' || (sheet.type === 'couple' && pIdx === 0)) {
                     nameInputs = `
+                        <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
                         <div style="display:flex; gap:10px; margin-bottom:10px;">
                             <div style="flex:1;">
                                 <label>姓氏</label>
@@ -705,8 +713,9 @@
                             </div>
                         </div>
                     `;
-                } else if (sheet.type === 'single-female') {
+                } else if (sheet.type === 'single-female' || (sheet.type === 'couple' && pIdx === 1)) {
                     nameInputs = `
+                        <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
                         <div style="display:flex; gap:10px; margin-bottom:10px;">
                             <div style="flex:1;">
                                 <label>夫家姓 (無則留空)</label>
@@ -724,7 +733,8 @@
                     `;
                 } else {
                     nameInputs = `
-                        <label>成員 ${pIdx + 1} 姓名</label>
+                        <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
+                        <label>姓名</label>
                         <input type="text" id="inner-name-${sIdx}-${pIdx}" value="${p.name || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'name', this.value)">
                     `;
                 }
