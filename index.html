@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位排字工具 - by瑋志 (第20版)</title>
+    <title>神主牌位排字工具 - by瑋志 (第21版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -354,10 +354,11 @@
 <script>
     const STORAGE_KEY = 'tablet_data_v1';
     
+    // 初始化內牌資料結構，加入姓氏、本家氏、名字屬性
     let innerSheets = [
         {
-            type: 'single',
-            persons: [{ name: " ", main: "顯考陳公諱文華官一位神主", birth: "生於民國三十年二月十五日吉時受生", death: "卒于民國一一二年八月十日吉時別逝" }]
+            type: 'single-male',
+            persons: [{ name: "陳文華", surname: "陳", maidenName: "", givenName: "文華", main: "顯考陳公諱文華官一位神主", birth: "生於民國三十年二月十五日吉時受生", death: "卒于民國一一二年八月十日吉時別逝" }]
         }
     ];
 
@@ -366,10 +367,10 @@
         // 設定外牌選項的監聽器
         document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
         
-        // 姓名欄位連動主文的監聽器
-        document.getElementById('surname').addEventListener('input', () => { updateOuterMiddleText(); updateAll(); });
-        document.getElementById('maidenName').addEventListener('input', () => { updateOuterMiddleText(); updateAll(); });
-        document.getElementById('givenName').addEventListener('input', () => { updateOuterMiddleText(); updateAll(); });
+        // 姓名欄位連動主文及內牌的監聽器 (修改為 handleOuterInputChange)
+        document.getElementById('surname').addEventListener('input', handleOuterInputChange);
+        document.getElementById('maidenName').addEventListener('input', handleOuterInputChange);
+        document.getElementById('givenName').addEventListener('input', handleOuterInputChange);
         
         document.getElementById('uploadExcel').addEventListener('change', handleExcelUpload);
         
@@ -382,7 +383,7 @@
         loadFromLocalStorage();
 
         toggleDisplayMode();
-        updateOuterVisibility(); // 初始化時設定正確的欄位顯示
+        updateOuterVisibility();
         renderInnerSheets();
         updateAll();
     }
@@ -429,7 +430,11 @@
                 if (data.year) document.getElementById('year').value = data.year;
                 
                 if (data.innerSheets && Array.isArray(data.innerSheets)) {
-                    innerSheets = data.innerSheets;
+                    // 兼容舊版資料
+                    innerSheets = data.innerSheets.map(sheet => {
+                        if (sheet.type === 'single') sheet.type = 'single-male';
+                        return sheet;
+                    });
                 }
             } catch (error) {
                 console.error("讀取暫存資料失敗:", error);
@@ -481,7 +486,7 @@
         el.style.color = isLucky ? '#4CAF50' : '#d32f2f';
     }
 
-    // 更新外牌輸入欄位的顯示狀態 (基於牌位類型)
+    // 更新外牌輸入欄位的顯示狀態
     function updateOuterVisibility() {
         const type = document.getElementById('outerType').value;
         const maidenField = document.querySelector('.field-maiden');
@@ -507,7 +512,7 @@
         }
     }
 
-    // 自動組成中行主文
+    // 自動組成外牌中行主文
     function updateOuterMiddleText() {
         const type = document.getElementById('outerType').value;
         if (type === 'custom') return; 
@@ -529,16 +534,77 @@
         }
     }
 
+    // 處理外牌打字事件，同步將資料帶入內牌 (不重新渲染畫面以防止失去焦點)
+    function handleOuterInputChange() {
+        updateOuterMiddleText();
+        
+        const outerType = document.getElementById('outerType').value;
+        if (innerSheets.length > 0) {
+            const firstSheet = innerSheets[0];
+            const p = firstSheet.persons[0];
+            let synced = false;
+            
+            if (outerType === 'male' && firstSheet.type === 'single-male') {
+                p.surname = document.getElementById('surname').value;
+                p.givenName = document.getElementById('givenName').value;
+                synced = true;
+            } else if (outerType === 'female' && firstSheet.type === 'single-female') {
+                p.surname = document.getElementById('surname').value;
+                p.maidenName = document.getElementById('maidenName').value;
+                p.givenName = document.getElementById('givenName').value;
+                synced = true;
+            }
+            
+            if (synced) {
+                updateInnerMainText(0, 0); // 重新生成內牌主文
+                // 直接針對欄位賦值，避免重新渲染造成輸入框失去焦點
+                const snInput = document.getElementById(`inner-surname-0-0`);
+                if(snInput) snInput.value = p.surname;
+                const mnInput = document.getElementById(`inner-maiden-0-0`);
+                if(mnInput) mnInput.value = p.maidenName;
+                const gnInput = document.getElementById(`inner-given-0-0`);
+                if(gnInput) gnInput.value = p.givenName;
+                const mainInput = document.getElementById(`inner-main-0-0`);
+                if(mainInput) mainInput.value = p.main;
+            }
+        }
+        
+        updateAll(); // 更新預覽與儲存
+    }
+
+    // 處理外牌大類型切換 (可安全觸發重新渲染)
     function handleOuterTypeChange() {
         updateOuterVisibility();
         updateOuterMiddleText();
+        
+        const outerType = document.getElementById('outerType').value;
+        // 如果選擇個人牌位，自動將第一片木片切換為對應類型並帶入資料
+        if (innerSheets.length > 0) {
+            const p = innerSheets[0].persons[0];
+            if (outerType === 'male') {
+                innerSheets[0].type = 'single-male';
+                innerSheets[0].persons = innerSheets[0].persons.slice(0, 1);
+                p.surname = document.getElementById('surname').value;
+                p.givenName = document.getElementById('givenName').value;
+                updateInnerMainText(0, 0);
+            } else if (outerType === 'female') {
+                innerSheets[0].type = 'single-female';
+                innerSheets[0].persons = innerSheets[0].persons.slice(0, 1);
+                p.surname = document.getElementById('surname').value;
+                p.maidenName = document.getElementById('maidenName').value;
+                p.givenName = document.getElementById('givenName').value;
+                updateInnerMainText(0, 0);
+            }
+        }
+        
+        renderInnerSheets();
         updateAll();
     }
 
     function addInnerSheet() {
         innerSheets.push({
-            type: 'single',
-            persons: [{ name: "", main: "", birth: "生於", death: "卒于" }]
+            type: 'single-male',
+            persons: [{ name: "", surname: "", maidenName: "", givenName: "", main: "", birth: "生於", death: "卒于" }]
         });
         renderInnerSheets();
         updateAll();
@@ -553,22 +619,69 @@
     }
 
     function changeSheetType(idx, type) {
-        const count = type === 'single' ? 1 : (type === 'couple' ? 2 : 3);
+        const count = (type === 'single-male' || type === 'single-female') ? 1 : (type === 'couple' ? 2 : 3);
         const newPersons = [];
         for(let i=0; i<count; i++) {
-            newPersons.push(innerSheets[idx].persons[i] || { name: "", main: "", birth: "生於", death: "卒于" });
+            newPersons.push(innerSheets[idx].persons[i] || { name: "", surname: "", maidenName: "", givenName: "", main: "", birth: "生於", death: "卒于" });
         }
         innerSheets[idx].type = type;
         innerSheets[idx].persons = newPersons;
+
+        // 若切換為單人牌，且外牌類型吻合，自動帶入外牌資料
+        if (idx === 0) {
+            const outerType = document.getElementById('outerType').value;
+            if (type === 'single-male' && outerType === 'male') {
+                innerSheets[idx].persons[0].surname = document.getElementById('surname').value;
+                innerSheets[idx].persons[0].givenName = document.getElementById('givenName').value;
+                updateInnerMainText(idx, 0);
+            } else if (type === 'single-female' && outerType === 'female') {
+                innerSheets[idx].persons[0].surname = document.getElementById('surname').value;
+                innerSheets[idx].persons[0].maidenName = document.getElementById('maidenName').value;
+                innerSheets[idx].persons[0].givenName = document.getElementById('givenName').value;
+                updateInnerMainText(idx, 0);
+            }
+        }
+
         renderInnerSheets();
         updateAll();
     }
 
+    // 更新內牌主文拼裝邏輯
+    function updateInnerMainText(sIdx, pIdx) {
+        const sheet = innerSheets[sIdx];
+        const p = sheet.persons[pIdx];
+        
+        if (sheet.type === 'single-male') {
+            const safeSurname = p.surname ? p.surname.trim() : 'Ｏ';
+            const safeGiven = p.givenName ? p.givenName.trim() : '〇〇';
+            p.main = `顯考${safeSurname}公諱${safeGiven}官一位神主`;
+            p.name = `${safeSurname}${safeGiven}`;
+        } else if (sheet.type === 'single-female') {
+            const safeSurname = p.surname ? p.surname.trim() : '';
+            const safeMaiden = p.maidenName ? p.maidenName.trim() : 'Ｏ';
+            const safeGiven = p.givenName ? p.givenName.trim() : '〇〇';
+            const husbandStr = safeSurname ? `${safeSurname}門` : '';
+            p.main = `顯妣${husbandStr}${safeMaiden}氏${safeGiven}娘之神主`;
+            p.name = `${safeSurname}${safeMaiden}${safeGiven}`;
+        }
+    }
+
+    // 處理內牌欄位更新
     function syncInnerData(sheetIdx, personIdx, field, val) {
-        innerSheets[sheetIdx].persons[personIdx][field] = val;
+        const p = innerSheets[sheetIdx].persons[personIdx];
+        p[field] = val;
+
+        // 若更新姓名相關欄位，重新拼裝主文並動態賦值 (避免 re-render 失去焦點)
+        if (field === 'surname' || field === 'maidenName' || field === 'givenName') {
+            updateInnerMainText(sheetIdx, personIdx);
+            const mainInput = document.getElementById(`inner-main-${sheetIdx}-${personIdx}`);
+            if (mainInput) mainInput.value = p.main;
+        }
+
         updateAll();
     }
 
+    // 渲染內牌區域 UI
     function renderInnerSheets() {
         const container = document.getElementById('inner-sheets-container');
         container.innerHTML = '';
@@ -576,16 +689,55 @@
         innerSheets.forEach((sheet, sIdx) => {
             let pHtml = '';
             sheet.persons.forEach((p, pIdx) => {
+                let nameInputs = '';
+                
+                // 依據格式顯示對應姓名欄位
+                if (sheet.type === 'single-male') {
+                    nameInputs = `
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <div style="flex:1;">
+                                <label>姓氏</label>
+                                <input type="text" id="inner-surname-${sIdx}-${pIdx}" value="${p.surname || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'surname', this.value)">
+                            </div>
+                            <div style="flex:1;">
+                                <label>名字</label>
+                                <input type="text" id="inner-given-${sIdx}-${pIdx}" value="${p.givenName || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'givenName', this.value)">
+                            </div>
+                        </div>
+                    `;
+                } else if (sheet.type === 'single-female') {
+                    nameInputs = `
+                        <div style="display:flex; gap:10px; margin-bottom:10px;">
+                            <div style="flex:1;">
+                                <label>夫家姓 (無則留空)</label>
+                                <input type="text" id="inner-surname-${sIdx}-${pIdx}" value="${p.surname || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'surname', this.value)">
+                            </div>
+                            <div style="flex:1;">
+                                <label>氏(本家姓)</label>
+                                <input type="text" id="inner-maiden-${sIdx}-${pIdx}" value="${p.maidenName || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'maidenName', this.value)">
+                            </div>
+                            <div style="flex:1;">
+                                <label>名字</label>
+                                <input type="text" id="inner-given-${sIdx}-${pIdx}" value="${p.givenName || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'givenName', this.value)">
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    nameInputs = `
+                        <label>成員 ${pIdx + 1} 姓名</label>
+                        <input type="text" id="inner-name-${sIdx}-${pIdx}" value="${p.name || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'name', this.value)">
+                    `;
+                }
+
                 pHtml += `
                     <div class="inner-person-sub-block">
-                        <label>成員 ${pIdx + 1} 姓名</label>
-                        <input type="text" value="${p.name}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'name', this.value)">
+                        ${nameInputs}
                         <label>主文 (中) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-m"></span></label>
-                        <input type="text" value="${p.main}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'main', this.value)">
+                        <input type="text" id="inner-main-${sIdx}-${pIdx}" value="${p.main}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'main', this.value)">
                         <label>生日 (右) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-b"></span></label>
-                        <input type="text" value="${p.birth}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'birth', this.value)">
+                        <input type="text" id="inner-birth-${sIdx}-${pIdx}" value="${p.birth}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'birth', this.value)">
                         <label>忌日 (左) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-d"></span></label>
-                        <input type="text" value="${p.death}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'death', this.value)">
+                        <input type="text" id="inner-death-${sIdx}-${pIdx}" value="${p.death}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'death', this.value)">
                     </div>`;
             });
 
@@ -595,7 +747,8 @@
                     <div class="form-group">
                         <label>木片 ${sIdx + 1} 格式</label>
                         <select onchange="changeSheetType(${sIdx}, this.value)">
-                            <option value="single" ${sheet.type==='single'?'selected':''}>單人</option>
+                            <option value="single-male" ${sheet.type==='single-male'?'selected':''}>單人 - 個人牌位(男)</option>
+                            <option value="single-female" ${sheet.type==='single-female'?'selected':''}>單人 - 個人牌位(女)</option>
                             <option value="couple" ${sheet.type==='couple'?'selected':''}>夫妻</option>
                             <option value="trio" ${sheet.type==='trio'?'selected':''}>三人</option>
                         </select>
@@ -637,10 +790,17 @@
         const innerPrevContainer = document.getElementById('prev-inner-container');
         innerPrevContainer.innerHTML = '';
         
+        const typeMap = {
+            'single-male': '單人(男)',
+            'single-female': '單人(女)',
+            'couple': '夫妻',
+            'trio': '三人'
+        };
+
         innerSheets.forEach((sheet, sIdx) => {
             const sheetDiv = document.createElement('div');
             sheetDiv.className = 'inner-tablet';
-            let sheetText = `\n【內牌木片 ${sIdx + 1} - ${sheet.type}】\n`;
+            let sheetText = `\n【內牌木片 ${sIdx + 1} - ${typeMap[sheet.type] || sheet.type}】\n`;
 
             sheet.persons.forEach((p, pIdx) => {
                 updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-m`, p.main, ['老', '生']);
@@ -710,8 +870,15 @@
 
                     if (firstCell.includes("木片")) {
                         const typeMatch = firstCell.match(/\((.*?)\)/);
-                        const type = typeMatch ? typeMatch[1] : "single";
-                        const personCount = (type === 'single' ? 1 : (type === 'couple' ? 2 : 3));
+                        const typeStr = typeMatch ? typeMatch[1] : "single-male";
+                        
+                        let type = 'single-male';
+                        if (typeStr.includes('女') || typeStr === 'single-female') type = 'single-female';
+                        else if (typeStr.includes('男') || typeStr === 'single-male' || typeStr === 'single') type = 'single-male';
+                        else if (typeStr.includes('夫妻') || typeStr === 'couple') type = 'couple';
+                        else if (typeStr.includes('三人') || typeStr === 'trio') type = 'trio';
+
+                        const personCount = (type === 'single-male' || type === 'single-female' ? 1 : (type === 'couple' ? 2 : 3));
                         
                         let persons = [];
                         for (let j = 1; j <= personCount; j++) {
@@ -719,6 +886,7 @@
                             if (pRow) {
                                 persons.push({
                                     name: pRow[1] || "",
+                                    surname: "", maidenName: "", givenName: "", // 從匯入可能無法完美還原細項，依賴人工微調
                                     birth: (pRow[2] || "").split(' [')[0],
                                     main: (pRow[3] || "").split(' [')[0],
                                     death: (pRow[4] || "").split(' [')[0]
@@ -730,7 +898,7 @@
                 }
                 
                 if (innerSheets.length === 0) {
-                    innerSheets = [{ type: 'single', persons: [{ name: "", main: "", birth: "生於", death: "卒于" }] }];
+                    innerSheets = [{ type: 'single-male', persons: [{ name: "", surname: "", maidenName: "", givenName: "", main: "", birth: "生於", death: "卒于" }] }];
                 }
 
                 alert("資料讀取成功！");
@@ -803,9 +971,16 @@
             data.push([]);
         }
         
+        const typeMap = {
+            'single-male': '單人(男)',
+            'single-female': '單人(女)',
+            'couple': '夫妻',
+            'trio': '三人'
+        };
+
         data.push(["【內牌木片資料】"]);
         innerSheets.forEach((sheet, sIdx) => {
-            data.push([`木片 ${sIdx + 1} (${sheet.type})`]);
+            data.push([`木片 ${sIdx + 1} (${typeMap[sheet.type] || sheet.type})`]);
             data.push(["成員", "姓名", "生日", "主文", "忌日"]);
             sheet.persons.forEach((p, pIdx) => {
                 data.push([`成員 ${pIdx + 1}`, p.name, `${p.birth} [${getFortune(p.birth)}]`, `${p.main} [${getFortune(p.main)}]`, `${p.death} [${getFortune(p.death)}]`]);
