@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位排字工具 - by瑋志 (第22版)</title>
+    <title>神主牌位排字工具 - by瑋志 (第2４版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -220,6 +220,13 @@
 
         .mode-hidden { display: none !important; }
 
+        /* 特殊文字（氏、諱）排版優化：縮小 3 分之 1 並往右挪半個字體 */
+        .char-aside {
+            display: inline-block;
+            font-size: 0.67em;
+            transform: translateX(0.5em);
+        }
+
         @media (max-width: 900px) { .container { flex-direction: column; } .settings-panel { max-height: none; } }
     </style>
 </head>
@@ -301,7 +308,7 @@
                 <input type="text" id="outerMiddle" value="堂上Ｏ姓歷代祖考妣之神位">
             </div>
             <div class="form-group">
-                <label>奉祀人 (右行) <span class="fortune-tag" id="ft-worship"></span></label>
+                <label>奉祀人 (right行) <span class="fortune-tag" id="ft-worship"></span></label>
                 <input type="text" id="worship" value="陽上子孫奉祀">
             </div>
             <div class="form-group">
@@ -768,6 +775,13 @@
         });
     }
 
+    // 將特定關鍵字（氏、諱）轉成特殊縮小且右移的 HTML 格式
+    function formatTabletText(text) {
+        if (!text) return "";
+        return text.replace(/氏/g, '<span class="char-aside">氏</span>')
+                   .replace(/諱/g, '<span class="char-aside">諱</span>');
+    }
+
     function updateAll() {
         const mode = document.getElementById('displayMode').value;
         const tabletId = document.getElementById('tabletId').value;
@@ -791,7 +805,8 @@
 
             document.getElementById('prev-tanghao').innerText = tanghaoReversed;
             document.getElementById('prev-year').innerText = year;
-            document.getElementById('prev-outermiddle').innerText = outerMiddle;
+            // 套用格式化函數，並改用 innerHTML 渲染
+            document.getElementById('prev-outermiddle').innerHTML = formatTabletText(outerMiddle);
             document.getElementById('prev-worship').innerText = worship;
 
             fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${year}\n${outerMiddle}\n${worship}\n`;
@@ -819,7 +834,8 @@
 
                 const col = document.createElement('div');
                 col.className = 'inner-person-col';
-                col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${p.main}</div><div class="inner-side">${p.birth}</div>`;
+                // 套用格式化函數到內牌主文
+                col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${formatTabletText(p.main)}</div><div class="inner-side">${p.birth}</div>`;
                 sheetDiv.prepend(col); 
 
                 sheetText += `成員${pIdx+1}(${p.name})：\n${p.birth}\n${p.main}\n${p.death}\n`;
@@ -896,7 +912,7 @@
                             if (pRow) {
                                 persons.push({
                                     name: pRow[1] || "",
-                                    surname: "", maidenName: "", givenName: "", // 從匯入可能無法完美還原細項，依賴人工微調
+                                    surname: "", maidenName: "", givenName: "", 
                                     birth: (pRow[2] || "").split(' [')[0],
                                     main: (pRow[3] || "").split(' [')[0],
                                     death: (pRow[4] || "").split(' [')[0]
