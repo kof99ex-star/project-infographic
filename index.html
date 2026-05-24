@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位排字工具 - by瑋志 (第24版)</title>
+    <title>神主牌位排字工具 - by瑋志 (最新版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -164,34 +164,37 @@
         }
         .preview-content.active { display: flex; }
 
+        /* 外牌外框 */
         .outer-tablet {
             width: 260px; height: 550px; background: var(--wood-bg); border: 8px solid var(--wood-border);
             border-radius: 20px 20px 0 0; color: var(--text-dark); position: relative;
-            display: flex; align-items: center; outline: 2px solid rgba(0,0,0,0.3) inset;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 35px 15px 40px 15px; box-sizing: border-box;
             box-shadow: 5px 10px 20px rgba(0,0,0,0.3);
         }
 
-        .tanghao { writing-mode: horizontal-tb; text-align: center; font-size: 1.6rem; font-weight: bold; margin-bottom: 20px; letter-spacing: 5px; width: 100%; }
+        /* 堂號樣式：距離主文半個字體高 */
+        .tanghao { 
+            writing-mode: horizontal-tb; 
+            text-align: center; 
+            font-size: 1.6rem; 
+            font-weight: bold; 
+            margin-bottom: 0.5em; 
+            letter-spacing: 5px; 
+            width: 100%; 
+        }
         
+        /* 內文主體區塊：設定為底部對齊 (flex-end) */
         .tablet-body { 
             display: flex; 
             justify-content: space-between; 
             width: 100%; 
-            height: 100%; 
-            padding: 0 15px 40px 15px; 
-            box-sizing: border-box; 
+            flex: 1; 
             align-items: flex-end; 
         }
 
-        .col-right, .col-left { 
-            font-size: 1.1rem; 
-            line-height: 1.5; 
-            writing-mode: vertical-rl; 
-            text-orientation: upright;
-            height: auto;
-        }
-
-        .col-middle { 
+        /* 左中右三行：字體大小格式統一，靠底部對齊 */
+        .col-right, .col-left, .col-middle { 
             font-size: 1.7rem; 
             font-weight: bold; 
             letter-spacing: 2px; 
@@ -301,7 +304,7 @@
             </div>
             <div class="form-group">
                 <label>堂號 (橫批) <span class="fortune-tag" id="ft-tanghao"></span></label>
-                <input type="text" id="tanghao" value="佛　恩">
+                <input type="text" id="tanghao" value="佛 恩">
             </div>
             <div class="form-group">
                 <label>外牌主文 (中行) <span class="fortune-tag" id="ft-outermiddle"></span></label>
@@ -331,13 +334,11 @@
 
         <div id="tab-outer" class="preview-content active">
             <div class="outer-tablet">
-                <div style="width:100%; display:flex; flex-direction:column; align-items:center; height:100%;">
-                    <div class="tanghao" id="prev-tanghao"></div>
-                    <div class="tablet-body">
-                        <div class="col-right" id="prev-worship"></div>
-                        <div class="col-middle" id="prev-outermiddle"></div>
-                        <div class="col-left" id="prev-year"></div>
-                    </div>
+                <div class="tanghao" id="prev-tanghao"></div>
+                <div class="tablet-body">
+                    <div class="col-right" id="prev-worship"></div>
+                    <div class="col-middle" id="prev-outermiddle"></div>
+                    <div class="col-left" id="prev-year"></div>
                 </div>
             </div>
         </div>
@@ -361,7 +362,6 @@
 <script>
     const STORAGE_KEY = 'tablet_data_v1';
     
-    // 初始化內牌資料結構，加入姓氏、本家氏、名字屬性
     let innerSheets = [
         {
             type: 'single-male',
@@ -369,33 +369,25 @@
         }
     ];
 
-    // 初始化
     function init() {
-        // 設定外牌選項的監聽器
         document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
-        
-        // 姓名欄位連動主文及內牌的監聽器
         document.getElementById('surname').addEventListener('input', handleOuterInputChange);
         document.getElementById('maidenName').addEventListener('input', handleOuterInputChange);
         document.getElementById('givenName').addEventListener('input', handleOuterInputChange);
-        
         document.getElementById('uploadExcel').addEventListener('change', handleExcelUpload);
         
-        // 其他所有輸入欄位觸發更新
         document.querySelectorAll('.settings-panel input:not(#surname):not(#maidenName):not(#givenName), .settings-panel select:not(#outerType), .settings-panel textarea').forEach(el => {
             el.addEventListener('input', updateAll);
             el.addEventListener('change', updateAll);
         });
 
         loadFromLocalStorage();
-
         toggleDisplayMode();
         updateOuterVisibility();
         renderInnerSheets();
         updateAll();
     }
 
-    // --- LocalStorage 自動儲存與讀取功能 ---
     function saveToLocalStorage() {
         const data = {
             displayMode: document.getElementById('displayMode').value,
@@ -421,7 +413,6 @@
         if (savedData) {
             try {
                 const data = JSON.parse(savedData);
-                
                 if (data.displayMode) document.getElementById('displayMode').value = data.displayMode;
                 if (data.tabletId) document.getElementById('tabletId').value = data.tabletId;
                 if (data.entryDate) document.getElementById('entryDate').value = data.entryDate;
@@ -437,7 +428,6 @@
                 if (data.year) document.getElementById('year').value = data.year;
                 
                 if (data.innerSheets && Array.isArray(data.innerSheets)) {
-                    // 兼容舊版資料
                     innerSheets = data.innerSheets.map(sheet => {
                         if (sheet.type === 'single') sheet.type = 'single-male';
                         return sheet;
@@ -455,7 +445,6 @@
             location.reload();
         }
     }
-    // ----------------------------------------
 
     function toggleDisplayMode() {
         const mode = document.getElementById('displayMode').value;
@@ -493,7 +482,6 @@
         el.style.color = isLucky ? '#4CAF50' : '#d32f2f';
     }
 
-    // 更新外牌輸入欄位的顯示狀態
     function updateOuterVisibility() {
         const type = document.getElementById('outerType').value;
         const maidenField = document.querySelector('.field-maiden');
@@ -519,7 +507,6 @@
         }
     }
 
-    // 自動組成外牌中行主文
     function updateOuterMiddleText() {
         const type = document.getElementById('outerType').value;
         if (type === 'custom') return; 
@@ -541,10 +528,8 @@
         }
     }
 
-    // 處理外牌打字事件，同步將資料帶入內牌 (不重新渲染畫面以防止失去焦點)
     function handleOuterInputChange() {
         updateOuterMiddleText();
-        
         const outerType = document.getElementById('outerType').value;
         if (innerSheets.length > 0) {
             const firstSheet = innerSheets[0];
@@ -563,8 +548,7 @@
             }
             
             if (synced) {
-                updateInnerMainText(0, 0); // 重新生成內牌主文
-                // 直接針對欄位賦值，避免重新渲染造成輸入框失去焦點
+                updateInnerMainText(0, 0);
                 const snInput = document.getElementById(`inner-surname-0-0`);
                 if(snInput) snInput.value = p.surname;
                 const mnInput = document.getElementById(`inner-maiden-0-0`);
@@ -575,17 +559,13 @@
                 if(mainInput) mainInput.value = p.main;
             }
         }
-        
-        updateAll(); // 更新預覽與儲存
+        updateAll();
     }
 
-    // 處理外牌大類型切換 (可安全觸發重新渲染)
     function handleOuterTypeChange() {
         updateOuterVisibility();
         updateOuterMiddleText();
-        
         const outerType = document.getElementById('outerType').value;
-        // 如果選擇個人牌位，自動將第一片木片切換為對應類型並帶入資料
         if (innerSheets.length > 0) {
             const p = innerSheets[0].persons[0];
             if (outerType === 'male') {
@@ -603,7 +583,6 @@
                 updateInnerMainText(0, 0);
             }
         }
-        
         renderInnerSheets();
         updateAll();
     }
@@ -634,7 +613,6 @@
         innerSheets[idx].type = type;
         innerSheets[idx].persons = newPersons;
 
-        // 若切換為單人牌，且外牌類型吻合，自動帶入外牌資料
         if (idx === 0) {
             const outerType = document.getElementById('outerType').value;
             if (type === 'single-male' && outerType === 'male') {
@@ -649,7 +627,6 @@
             }
         }
 
-        // 若切換為夫妻牌，初始化兩人的主文
         if (type === 'couple') {
             updateInnerMainText(idx, 0);
             updateInnerMainText(idx, 1);
@@ -659,7 +636,6 @@
         updateAll();
     }
 
-    // 更新內牌主文拼裝邏輯
     function updateInnerMainText(sIdx, pIdx) {
         const sheet = innerSheets[sIdx];
         const p = sheet.persons[pIdx];
@@ -679,22 +655,18 @@
         }
     }
 
-    // 處理內牌欄位更新
     function syncInnerData(sheetIdx, personIdx, field, val) {
         const p = innerSheets[sheetIdx].persons[personIdx];
         p[field] = val;
 
-        // 若更新姓名相關欄位，重新拼裝主文並動態賦值 (避免 re-render 失去焦點)
         if (field === 'surname' || field === 'maidenName' || field === 'givenName') {
             updateInnerMainText(sheetIdx, personIdx);
             const mainInput = document.getElementById(`inner-main-${sheetIdx}-${personIdx}`);
             if (mainInput) mainInput.value = p.main;
         }
-
         updateAll();
     }
 
-    // 渲染內牌區域 UI
     function renderInnerSheets() {
         const container = document.getElementById('inner-sheets-container');
         container.innerHTML = '';
@@ -705,7 +677,6 @@
                 let nameInputs = '';
                 let headerLabel = sheet.type === 'couple' ? (pIdx === 0 ? `成員 ${pIdx + 1} (男)` : `成員 ${pIdx + 1} (女)`) : `成員 ${pIdx + 1}`;
                 
-                // 依據格式顯示對應姓名欄位
                 if (sheet.type === 'single-male' || (sheet.type === 'couple' && pIdx === 0)) {
                     nameInputs = `
                         <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
@@ -775,7 +746,6 @@
         });
     }
 
-    // 將特定關鍵字（氏、諱）轉成特殊縮小且右移的 HTML 格式
     function formatTabletText(text) {
         if (!text) return "";
         return text.replace(/氏/g, '<span class="char-aside">氏</span>')
@@ -804,10 +774,10 @@
             updateFortuneLabel('ft-worship', worship, ['生']);
 
             document.getElementById('prev-tanghao').innerText = tanghaoReversed;
-            document.getElementById('prev-year').innerText = year;
-            // 套用格式化函數，並改用 innerHTML 渲染
+            // 這裡也套用格式化，確保若左/右聯出現諱或氏也會自動縮小
+            document.getElementById('prev-year').innerHTML = formatTabletText(year);
             document.getElementById('prev-outermiddle').innerHTML = formatTabletText(outerMiddle);
-            document.getElementById('prev-worship').innerText = worship;
+            document.getElementById('prev-worship').innerHTML = formatTabletText(worship);
 
             fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${year}\n${outerMiddle}\n${worship}\n`;
         }
@@ -834,7 +804,6 @@
 
                 const col = document.createElement('div');
                 col.className = 'inner-person-col';
-                // 套用格式化函數到內牌主文
                 col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${formatTabletText(p.main)}</div><div class="inner-side">${p.birth}</div>`;
                 sheetDiv.prepend(col); 
 
@@ -846,7 +815,6 @@
         });
 
         document.getElementById('text-output').value = fullText;
-
         saveToLocalStorage();
     }
 
