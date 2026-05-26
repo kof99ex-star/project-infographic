@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位助手 - by瑋志 (第26版)</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>神主牌位助手 - by瑋志 (第27版_下載圖片_修正版)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js">
+    </script>
     <style>
         :root {
             --wood-bg: linear-gradient(135deg, #d2a679 0%, #b37746 100%);
@@ -12,6 +15,10 @@
             --inner-bg: #cc0000;
             --text-dark: #222;
             --text-light: #f5f5f5;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -33,7 +40,7 @@
             color: #6b4423;
             font-size: 2.5rem;
             margin: 0;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
             letter-spacing: 4px;
         }
 
@@ -51,7 +58,7 @@
             background: #fff;
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -64,11 +71,26 @@
             margin-top: 0;
         }
 
-        .form-row { display: flex; gap: 15px; margin-bottom: 15px; }
-        .form-group { margin-bottom: 15px; flex: 1; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 0.95rem; }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            flex: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            font-size: 0.95rem;
+        }
 
-        input[type="text"], select, textarea {
+        input[type="text"],
+        select,
+        textarea {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
@@ -83,7 +105,12 @@
             min-height: 80px;
         }
 
-        .fortune-tag { font-size: 0.85rem; color: #d32f2f; margin-left: 10px; font-weight: normal; }
+        .fortune-tag {
+            font-size: 0.85rem;
+            color: #d32f2f;
+            margin-left: 10px;
+            font-weight: normal;
+        }
 
         .inner-sheet-block {
             background: #fdfdfd;
@@ -125,8 +152,9 @@
             border-radius: 3px;
             cursor: pointer;
             font-size: 0.8rem;
+            z-index: 2;
         }
-        
+
         .btn-clear-storage {
             background: #757575;
             color: white;
@@ -138,7 +166,9 @@
             margin-top: 10px;
             width: 100%;
         }
-        .btn-clear-storage:hover { background: #555; }
+        .btn-clear-storage:hover {
+            background: #555;
+        }
 
         .import-section {
             background: #f9f9f9;
@@ -149,846 +179,1231 @@
             border-radius: 10px;
         }
 
-        .preview-panel { flex: 1; min-width: 400px; display: flex; flex-direction: column; gap: 20px; }
-        .tabs { display: flex; gap: 10px; }
-        .tab-btn {
-            padding: 10px 20px; border: none; background: #ddd; cursor: pointer;
-            border-radius: 5px 5px 0 0; font-size: 1rem; font-family: inherit; font-weight: bold; flex: 1;
+        .preview-panel {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
-        .tab-btn.active { background: #b37746; color: #fff; }
-        .tab-btn.hidden { display: none; }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #ddd;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            font-size: 1rem;
+            font-family: inherit;
+            font-weight: bold;
+            flex: 1;
+            min-width: 80px;
+        }
+        .tab-btn.active {
+            background: #b37746;
+            color: #fff;
+        }
+        .tab-btn.hidden {
+            display: none;
+        }
+
+        .btn-download-img {
+            padding: 10px 18px;
+            border: 2px solid #b37746;
+            background: #fff;
+            color: #6b4423;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: inherit;
+            font-weight: bold;
+            white-space: nowrap;
+            transition: all 0.2s;
+            margin-left: auto;
+        }
+        .btn-download-img:hover {
+            background: #b37746;
+            color: #fff;
+        }
+        .btn-download-img:active {
+            transform: scale(0.96);
+        }
 
         .preview-content {
-            background: #fff; padding: 30px; border-radius: 0 10px 10px 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: none; justify-content: center; min-height: 600px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 0 10px 10px 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            display: none;
+            justify-content: center;
+            min-height: 600px;
+            position: relative;
         }
-        .preview-content.active { display: flex; }
+        .preview-content.active {
+            display: flex;
+        }
 
         /* 外牌外框 */
         .outer-tablet {
-            width: 260px; height: 550px; background: var(--wood-bg); border: 8px solid var(--wood-border);
-            border-radius: 20px 20px 0 0; color: var(--text-dark); position: relative;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            padding: 35px 15px 40px 15px; box-sizing: border-box;
-            box-shadow: 5px 10px 20px rgba(0,0,0,0.3);
+            width: 260px;
+            height: 550px;
+            background: var(--wood-bg);
+            border: 8px solid var(--wood-border);
+            border-radius: 20px 20px 0 0;
+            color: var(--text-dark);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 35px 15px 40px 15px;
+            box-sizing: border-box;
+            box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
         }
 
-        /* 堂號樣式：距離主文半個字體高 */
-        .tanghao { 
-            writing-mode: horizontal-tb; 
-            text-align: center; 
-            font-size: 1.6rem; 
-            font-weight: bold; 
-            margin-bottom: 0.5em; 
-            letter-spacing: 5px; 
-            width: 100%; 
-        }
-        
-        /* 內文主體區塊：設定為底部對齊 (flex-end) */
-        .tablet-body { 
-            display: flex; 
-            justify-content: space-between; 
-            width: 100%; 
-            flex: 1; 
-            align-items: flex-end; 
+        /* 堂號樣式 */
+        .tanghao {
+            writing-mode: horizontal-tb;
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+            letter-spacing: 5px;
+            width: 100%;
+            flex-shrink: 0;
         }
 
-        /* 左中右三行：字體大小格式統一，靠底部對齊 */
-        .col-right, .col-left, .col-middle { 
-            font-size: 1.7rem; 
-            font-weight: bold; 
-            letter-spacing: 2px; 
-            text-align: center; 
-            writing-mode: vertical-rl; 
+        /* 內文主體區塊 */
+        .tablet-body {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            flex: 1;
+            align-items: flex-end;
+            min-height: 0;
+        }
+
+        /* 左中右三行 */
+        .col-right,
+        .col-left,
+        .col-middle {
+            font-size: 1.7rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-align: center;
+            writing-mode: vertical-rl;
             text-orientation: upright;
             height: auto;
+            flex-shrink: 0;
+            line-height: 1.4;
         }
 
-        #prev-inner-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+        #prev-inner-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
         .inner-tablet {
-            width: 240px; height: 500px; background: var(--inner-bg); border-radius: 5px;
-            color: #000; padding: 25px 10px; display: flex; justify-content: center; gap: 10px;
-            box-shadow: 3px 6px 15px rgba(0,0,0,0.3); box-sizing: border-box; position: relative;
+            width: 240px;
+            height: 500px;
+            background: var(--inner-bg);
+            border-radius: 5px;
+            color: #000;
+            padding: 25px 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 3px 6px 15px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+            position: relative;
+            flex-shrink: 0;
         }
-        .inner-person-col { display: flex; justify-content: space-between; height: 100%; border-right: 1px dashed rgba(0,0,0,0.2); padding-right: 8px; }
-        .inner-person-col:last-child { border-right: none; padding-right: 0; }
-        .inner-side { font-size: 0.85rem; padding-top: 25px; writing-mode: vertical-rl; text-orientation: upright; line-height: 1.2; }
-        .inner-main { font-size: 1.2rem; font-weight: bold; margin: 0 2px; writing-mode: vertical-rl; text-orientation: upright; }
 
-        #text-output { width: 100%; height: 400px; padding: 20px; background: #fafafa; border: 1px solid #ddd; border-radius: 5px; font-family: "Courier New", monospace; font-size: 1.1rem; line-height: 1.8; resize: vertical; box-sizing: border-box; }
-        .btn-copy { background: #4CAF50; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1rem; margin-top: 10px; width: 100%; font-weight: bold; }
-        .btn-save { background: #2196F3; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
-        .btn-word { background: #0078d4; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
-        .btn-excel { background: #E91E63; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        /* 使用 CSS Grid 明確劃分三行區塊 */
+        .inner-person-col {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            justify-items: center;
+            align-items: start;
+            height: 100%;
+            flex: 1;
+            max-width: 120px;
+            border-right: 1px dashed rgba(0, 0, 0, 0.2);
+            padding-right: 4px;
+            padding-left: 4px;
+            box-sizing: border-box;
+            min-width: 0;
+        }
+        .inner-person-col:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
 
-        .mode-hidden { display: none !important; }
+        .inner-side {
+            font-size: 0.85rem;
+            padding-top: 25px;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: visible;
+        }
 
-        /* 特殊文字（氏、諱）排版優化：縮小 3 分之 1 並往右挪半個字體 */
+        .inner-main {
+            font-size: 1.2rem;
+            font-weight: bold;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: visible;
+        }
+
+        #text-output {
+            width: 100%;
+            height: 400px;
+            padding: 20px;
+            background: #fafafa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: "Courier New", monospace;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .btn-copy {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            width: 100%;
+            font-weight: bold;
+        }
+        .btn-save {
+            background: #2196F3;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .btn-word {
+            background: #0078d4;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .btn-excel {
+            background: #E91E63;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .mode-hidden {
+            display: none !important;
+        }
+
+        /* 特殊文字排版優化 */
         .char-aside {
             display: inline-block;
             font-size: 0.67em;
             transform: translateX(0.5em);
         }
 
-        @media (max-width: 900px) { .container { flex-direction: column; } .settings-panel { max-height: none; } }
+        .download-hint {
+            font-size: 0.8rem;
+            color: #999;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+            .settings-panel {
+                max-height: none;
+            }
+            .outer-tablet {
+                width: 220px;
+                height: 460px;
+                padding: 25px 10px 30px 10px;
+                border-width: 6px;
+            }
+            .col-right,
+            .col-left,
+            .col-middle {
+                font-size: 1.3rem;
+            }
+            .tanghao {
+                font-size: 1.3rem;
+            }
+            .inner-tablet {
+                width: 200px;
+                height: 420px;
+                padding: 20px 6px;
+            }
+            .inner-main {
+                font-size: 1rem;
+            }
+            .inner-side {
+                font-size: 0.7rem;
+            }
+            .inner-person-col {
+                max-width: 90px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="page-header">
-    <h1>神主牌位助手</h1>
-</div>
+    <div class="page-header">
+        <h1>神主牌位助手</h1>
+    </div>
 
-<div class="container">
-    <div class="settings-panel">
-        <div class="import-section">
-            <label style="color:#6b4423; display:block; margin-bottom:10px;">📂 讀取舊檔案 (僅限 .xlsx)</label>
-            <input type="file" id="uploadExcel" accept=".xlsx" style="font-size: 0.9rem;">
-            <button class="btn-clear-storage" onclick="clearLocalStorage()">🧹 清除暫存並重置</button>
-        </div>
-
-        <h2>管理資訊</h2>
-        <div class="form-group">
-            <label>顯示模式</label>
-            <select id="displayMode" onchange="toggleDisplayMode()">
-                <option value="both">外牌 + 內牌</option>
-                <option value="innerOnly">僅內牌</option>
-            </select>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>牌位編號</label>
-                <input type="text" id="tabletId" placeholder="必填.例如1F-01-23">
+    <div class="container">
+        <div class="settings-panel">
+            <div class="import-section">
+                <label style="color:#6b4423; display:block; margin-bottom:10px;">📂 讀取舊檔案 (僅限 .xlsx)</label>
+                <input type="file" id="uploadExcel" accept=".xlsx" style="font-size: 0.9rem;">
+                <button class="btn-clear-storage" onclick="clearLocalStorage()">🧹 清除暫存並重置</button>
             </div>
-            <div class="form-group">
-                <label>入牌日期</label>
-                <input type="text" id="entryDate" placeholder="115.5.30">
-            </div>
-        </div>
-        <div class="form-group">
-            <label>服務人員 / 申請人</label>
-            <input type="text" id="staffName" placeholder="請輸入姓名">
-        </div>
-        
-        <div class="form-group">
-            <label>備註事項</label>
-            <textarea id="tabletNotes" placeholder="請輸入相關備註，例如奉祀地點或特殊注意事項..."></textarea>
-        </div>
 
-        <div id="outer-settings-section">
-            <h2>外牌設定</h2>
+            <h2>管理資訊</h2>
+            <div class="form-group">
+                <label>顯示模式</label>
+                <select id="displayMode" onchange="toggleDisplayMode()">
+                    <option value="both">外牌 + 內牌</option>
+                    <option value="innerOnly">僅內牌</option>
+                </select>
+            </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>牌位類型</label>
-                    <select id="outerType">
-                        <option value="ancestor">歷代祖先牌位</option>
-                        <option value="male">個人牌位(男)</option>
-                        <option value="female">個人牌位(女)</option>
-                        <option value="custom">自定義內容</option>
-                    </select>
+                    <label>牌位編號</label>
+                    <input type="text" id="tabletId" placeholder="必填.例如1F-01-23">
                 </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group field-surname">
-                    <label id="lbl-surname">姓氏</label>
-                    <input type="text" id="surname" value="Ｏ">
-                </div>
-                <div class="form-group field-maiden" style="display:none;">
-                    <label>氏 (本家姓)</label>
-                    <input type="text" id="maidenName" value="Ｏ">
-                </div>
-                <div class="form-group field-given" style="display:none;">
-                    <label>名字</label>
-                    <input type="text" id="givenName" value="〇〇">
+                <div class="form-group">
+                    <label>入牌日期</label>
+                    <input type="text" id="entryDate" placeholder="115.5.30">
                 </div>
             </div>
             <div class="form-group">
-                <label>堂號 (橫批) <span class="fortune-tag" id="ft-tanghao"></span></label>
-                <input type="text" id="tanghao" value="佛 恩">
+                <label>服務人員 / 申請人</label>
+                <input type="text" id="staffName" placeholder="請輸入姓名">
             </div>
             <div class="form-group">
-                <label>外牌主文 (中行) <span class="fortune-tag" id="ft-outermiddle"></span></label>
-                <input type="text" id="outerMiddle" value="堂上Ｏ姓歷代祖考妣之神位">
+                <label>備註事項</label>
+                <textarea id="tabletNotes" placeholder="請輸入相關備註，例如奉祀地點或特殊注意事項..."></textarea>
             </div>
-            <div class="form-group">
-                <label>奉祀人 (右行) <span class="fortune-tag" id="ft-worship"></span></label>
-                <input type="text" id="worship" value="陽上子孫奉祀">
-            </div>
-            <div class="form-group">
-                <label>歲次 (左行) <span class="fortune-tag" id="ft-year"></span></label>
-                <input type="text" id="year" value="歲次丙午年立">
-            </div>
-        </div>
 
-        <h2 style="margin-top:30px;">內牌管理 (可多片)</h2>
-        <button class="btn-add-sheet" onclick="addInnerSheet()">+ 新增內牌木片</button>
-        <div id="inner-sheets-container"></div>
-    </div>
-
-    <div class="preview-panel">
-        <div class="tabs">
-            <button id="btn-tab-outer" class="tab-btn active" onclick="switchTab('tab-outer', this)">外牌視覺</button>
-            <button id="btn-tab-inner" class="tab-btn" onclick="switchTab('tab-inner', this)">內牌視覺</button>
-            <button class="tab-btn" onclick="switchTab('tab-text', this)">純文字輸出</button>
-        </div>
-
-        <div id="tab-outer" class="preview-content active">
-            <div class="outer-tablet">
-                <div class="tanghao" id="prev-tanghao"></div>
-                <div class="tablet-body">
-                    <div class="col-right" id="prev-worship"></div>
-                    <div class="col-middle" id="prev-outermiddle"></div>
-                    <div class="col-left" id="prev-year"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-inner" class="preview-content">
-            <div id="prev-inner-container"></div>
-        </div>
-
-        <div id="tab-text" class="preview-content" style="flex-direction: column;">
-            <textarea id="text-output" readonly></textarea>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
-                <button class="btn-save" onclick="saveAsTxt()">存為 .txt</button>
-                <button class="btn-word" onclick="saveAsWord()">存為 .docx</button>
-                <button class="btn-excel" onclick="saveAsExcel()">存為 .xlsx</button>
-            </div>
-            <button class="btn-copy" onclick="copyText()">複製全文至剪貼簿</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    const STORAGE_KEY = 'tablet_data_v1';
-    
-    let innerSheets = [
-        {
-            type: 'single-male',
-            persons: [{ name: "陳文華", surname: "陳", maidenName: "", givenName: "文華", main: "顯考陳公諱文華官一位神主", birth: "生於民國三十年二月十五日吉時受生", death: "卒于民國一一二年八月十日吉時別逝" }]
-        }
-    ];
-
-    function init() {
-        document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
-        document.getElementById('surname').addEventListener('input', handleOuterInputChange);
-        document.getElementById('maidenName').addEventListener('input', handleOuterInputChange);
-        document.getElementById('givenName').addEventListener('input', handleOuterInputChange);
-        document.getElementById('uploadExcel').addEventListener('change', handleExcelUpload);
-        
-        document.querySelectorAll('.settings-panel input:not(#surname):not(#maidenName):not(#givenName), .settings-panel select:not(#outerType), .settings-panel textarea').forEach(el => {
-            el.addEventListener('input', updateAll);
-            el.addEventListener('change', updateAll);
-        });
-
-        loadFromLocalStorage();
-        toggleDisplayMode();
-        updateOuterVisibility();
-        renderInnerSheets();
-        updateAll();
-    }
-
-    function saveToLocalStorage() {
-        const data = {
-            displayMode: document.getElementById('displayMode').value,
-            tabletId: document.getElementById('tabletId').value,
-            entryDate: document.getElementById('entryDate').value,
-            staffName: document.getElementById('staffName').value,
-            tabletNotes: document.getElementById('tabletNotes').value,
-            outerType: document.getElementById('outerType').value,
-            surname: document.getElementById('surname').value,
-            maidenName: document.getElementById('maidenName').value,
-            givenName: document.getElementById('givenName').value,
-            tanghao: document.getElementById('tanghao').value,
-            outerMiddle: document.getElementById('outerMiddle').value,
-            worship: document.getElementById('worship').value,
-            year: document.getElementById('year').value,
-            innerSheets: innerSheets
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    }
-
-    function loadFromLocalStorage() {
-        const savedData = localStorage.getItem(STORAGE_KEY);
-        if (savedData) {
-            try {
-                const data = JSON.parse(savedData);
-                if (data.displayMode) document.getElementById('displayMode').value = data.displayMode;
-                if (data.tabletId) document.getElementById('tabletId').value = data.tabletId;
-                if (data.entryDate) document.getElementById('entryDate').value = data.entryDate;
-                if (data.staffName) document.getElementById('staffName').value = data.staffName;
-                if (data.tabletNotes) document.getElementById('tabletNotes').value = data.tabletNotes;
-                if (data.outerType) document.getElementById('outerType').value = data.outerType;
-                if (data.surname) document.getElementById('surname').value = data.surname;
-                if (data.maidenName) document.getElementById('maidenName').value = data.maidenName;
-                if (data.givenName) document.getElementById('givenName').value = data.givenName;
-                if (data.tanghao) document.getElementById('tanghao').value = data.tanghao;
-                if (data.outerMiddle) document.getElementById('outerMiddle').value = data.outerMiddle;
-                if (data.worship) document.getElementById('worship').value = data.worship;
-                if (data.year) document.getElementById('year').value = data.year;
-                
-                if (data.innerSheets && Array.isArray(data.innerSheets)) {
-                    innerSheets = data.innerSheets.map(sheet => {
-                        if (sheet.type === 'single') sheet.type = 'single-male';
-                        return sheet;
-                    });
-                }
-            } catch (error) {
-                console.error("讀取暫存資料失敗:", error);
-            }
-        }
-    }
-
-    function clearLocalStorage() {
-        if (confirm("確定要清除目前所有的編輯內容並恢復預設嗎？(將無法復原)")) {
-            localStorage.removeItem(STORAGE_KEY);
-            location.reload();
-        }
-    }
-
-    function toggleDisplayMode() {
-        const mode = document.getElementById('displayMode').value;
-        const outerSection = document.getElementById('outer-settings-section');
-        const outerTabBtn = document.getElementById('btn-tab-outer');
-
-        if (mode === 'innerOnly') {
-            outerSection.classList.add('mode-hidden');
-            outerTabBtn.classList.add('hidden');
-            if (outerTabBtn.classList.contains('active')) {
-                switchTab('tab-inner', document.getElementById('btn-tab-inner'));
-            }
-        } else {
-            outerSection.classList.remove('mode-hidden');
-            outerTabBtn.classList.remove('hidden');
-        }
-        updateAll();
-    }
-
-    function getFortune(text) {
-        if (!text) return '';
-        const cleanStr = text.replace(/[\s\p{P}]/gu, '');
-        const len = cleanStr.length;
-        if (len === 0) return '';
-        const fortunes = ['苦', '生', '老', '病', '死'];
-        return `${len}字(${fortunes[len % 5]})`;
-    }
-
-    function updateFortuneLabel(elementId, text, targetFortunes) {
-        const el = document.getElementById(elementId);
-        if (!el) return;
-        const fortuneStr = getFortune(text);
-        el.textContent = fortuneStr;
-        const isLucky = targetFortunes.some(t => fortuneStr.includes(t));
-        el.style.color = isLucky ? '#4CAF50' : '#d32f2f';
-    }
-
-    function updateOuterVisibility() {
-        const type = document.getElementById('outerType').value;
-        const maidenField = document.querySelector('.field-maiden');
-        const givenField = document.querySelector('.field-given');
-        const lblSurname = document.getElementById('lbl-surname');
-
-        if (type === 'ancestor') {
-            maidenField.style.display = 'none';
-            givenField.style.display = 'none';
-            lblSurname.textContent = '姓氏';
-        } else if (type === 'male') {
-            maidenField.style.display = 'none';
-            givenField.style.display = 'block';
-            lblSurname.textContent = '姓氏';
-        } else if (type === 'female') {
-            maidenField.style.display = 'block';
-            givenField.style.display = 'block';
-            lblSurname.textContent = '夫家姓 (無則留空)';
-        } else {
-            maidenField.style.display = 'none';
-            givenField.style.display = 'none';
-            lblSurname.textContent = '姓氏';
-        }
-    }
-
-    function updateOuterMiddleText() {
-        const type = document.getElementById('outerType').value;
-        if (type === 'custom') return; 
-        
-        const surname = document.getElementById('surname').value.trim();
-        const maidenName = document.getElementById('maidenName').value.trim() || 'Ｏ';
-        const givenName = document.getElementById('givenName').value.trim() || '〇〇';
-        const middleInput = document.getElementById('outerMiddle');
-        
-        const safeSurname = surname || 'Ｏ';
-
-        if (type === 'ancestor') {
-            middleInput.value = `堂上${safeSurname}姓歷代祖考妣之神位`;
-        } else if (type === 'male') {
-            middleInput.value = `顯考${safeSurname}公諱${givenName}官一位神主`;
-        } else if (type === 'female') {
-            const husbandStr = surname ? `${surname}門` : '';
-            middleInput.value = `顯妣${husbandStr}${maidenName}氏${givenName}娘之神主`;
-        }
-    }
-
-    function handleOuterInputChange() {
-        updateOuterMiddleText();
-        const outerType = document.getElementById('outerType').value;
-        if (innerSheets.length > 0) {
-            const firstSheet = innerSheets[0];
-            const p = firstSheet.persons[0];
-            let synced = false;
-            
-            if (outerType === 'male' && firstSheet.type === 'single-male') {
-                p.surname = document.getElementById('surname').value;
-                p.givenName = document.getElementById('givenName').value;
-                synced = true;
-            } else if (outerType === 'female' && firstSheet.type === 'single-female') {
-                p.surname = document.getElementById('surname').value;
-                p.maidenName = document.getElementById('maidenName').value;
-                p.givenName = document.getElementById('givenName').value;
-                synced = true;
-            }
-            
-            if (synced) {
-                updateInnerMainText(0, 0);
-                const snInput = document.getElementById(`inner-surname-0-0`);
-                if(snInput) snInput.value = p.surname;
-                const mnInput = document.getElementById(`inner-maiden-0-0`);
-                if(mnInput) mnInput.value = p.maidenName;
-                const gnInput = document.getElementById(`inner-given-0-0`);
-                if(gnInput) gnInput.value = p.givenName;
-                const mainInput = document.getElementById(`inner-main-0-0`);
-                if(mainInput) mainInput.value = p.main;
-            }
-        }
-        updateAll();
-    }
-
-    function handleOuterTypeChange() {
-        updateOuterVisibility();
-        updateOuterMiddleText();
-        const outerType = document.getElementById('outerType').value;
-        if (innerSheets.length > 0) {
-            const p = innerSheets[0].persons[0];
-            if (outerType === 'male') {
-                innerSheets[0].type = 'single-male';
-                innerSheets[0].persons = innerSheets[0].persons.slice(0, 1);
-                p.surname = document.getElementById('surname').value;
-                p.givenName = document.getElementById('givenName').value;
-                updateInnerMainText(0, 0);
-            } else if (outerType === 'female') {
-                innerSheets[0].type = 'single-female';
-                innerSheets[0].persons = innerSheets[0].persons.slice(0, 1);
-                p.surname = document.getElementById('surname').value;
-                p.maidenName = document.getElementById('maidenName').value;
-                p.givenName = document.getElementById('givenName').value;
-                updateInnerMainText(0, 0);
-            }
-        }
-        renderInnerSheets();
-        updateAll();
-    }
-
-    function addInnerSheet() {
-        innerSheets.push({
-            type: 'single-male',
-            persons: [{ name: "", surname: "", maidenName: "", givenName: "", main: "", birth: "生於", death: "卒于" }]
-        });
-        renderInnerSheets();
-        updateAll();
-    }
-
-    function deleteSheet(idx) {
-        if (innerSheets.length <= 1) return alert("至少需保留一片內牌。");
-        if (!confirm("確定要刪除這片內牌嗎？")) return;
-        innerSheets.splice(idx, 1);
-        renderInnerSheets();
-        updateAll();
-    }
-
-    function changeSheetType(idx, type) {
-        const count = (type === 'single-male' || type === 'single-female') ? 1 : (type === 'couple' ? 2 : 3);
-        const newPersons = [];
-        for(let i=0; i<count; i++) {
-            newPersons.push(innerSheets[idx].persons[i] || { name: "", surname: "", maidenName: "", givenName: "", main: "", birth: "生於", death: "卒于" });
-        }
-        innerSheets[idx].type = type;
-        innerSheets[idx].persons = newPersons;
-
-        if (idx === 0) {
-            const outerType = document.getElementById('outerType').value;
-            if (type === 'single-male' && outerType === 'male') {
-                innerSheets[idx].persons[0].surname = document.getElementById('surname').value;
-                innerSheets[idx].persons[0].givenName = document.getElementById('givenName').value;
-                updateInnerMainText(idx, 0);
-            } else if (type === 'single-female' && outerType === 'female') {
-                innerSheets[idx].persons[0].surname = document.getElementById('surname').value;
-                innerSheets[idx].persons[0].maidenName = document.getElementById('maidenName').value;
-                innerSheets[idx].persons[0].givenName = document.getElementById('givenName').value;
-                updateInnerMainText(idx, 0);
-            }
-        }
-
-        if (type === 'couple') {
-            updateInnerMainText(idx, 0);
-            updateInnerMainText(idx, 1);
-        }
-
-        renderInnerSheets();
-        updateAll();
-    }
-
-    function updateInnerMainText(sIdx, pIdx) {
-        const sheet = innerSheets[sIdx];
-        const p = sheet.persons[pIdx];
-        
-        if (sheet.type === 'single-male' || (sheet.type === 'couple' && pIdx === 0)) {
-            const safeSurname = p.surname ? p.surname.trim() : 'Ｏ';
-            const safeGiven = p.givenName ? p.givenName.trim() : '〇〇';
-            p.main = `顯考${safeSurname}公諱${safeGiven}官一位神主`;
-            p.name = `${safeSurname}${safeGiven}`;
-        } else if (sheet.type === 'single-female' || (sheet.type === 'couple' && pIdx === 1)) {
-            const safeSurname = p.surname ? p.surname.trim() : '';
-            const safeMaiden = p.maidenName ? p.maidenName.trim() : 'Ｏ';
-            const safeGiven = p.givenName ? p.givenName.trim() : '〇〇';
-            const husbandStr = safeSurname ? `${safeSurname}門` : '';
-            p.main = `顯妣${husbandStr}${safeMaiden}氏${safeGiven}娘之神主`;
-            p.name = `${safeSurname}${safeMaiden}${safeGiven}`;
-        }
-    }
-
-    function syncInnerData(sheetIdx, personIdx, field, val) {
-        const p = innerSheets[sheetIdx].persons[personIdx];
-        p[field] = val;
-
-        if (field === 'surname' || field === 'maidenName' || field === 'givenName') {
-            updateInnerMainText(sheetIdx, personIdx);
-            const mainInput = document.getElementById(`inner-main-${sheetIdx}-${personIdx}`);
-            if (mainInput) mainInput.value = p.main;
-        }
-        updateAll();
-    }
-
-    function renderInnerSheets() {
-        const container = document.getElementById('inner-sheets-container');
-        container.innerHTML = '';
-
-        innerSheets.forEach((sheet, sIdx) => {
-            let pHtml = '';
-            sheet.persons.forEach((p, pIdx) => {
-                let nameInputs = '';
-                let headerLabel = sheet.type === 'couple' ? (pIdx === 0 ? `成員 ${pIdx + 1} (男)` : `成員 ${pIdx + 1} (女)`) : `成員 ${pIdx + 1}`;
-                
-                if (sheet.type === 'single-male' || (sheet.type === 'couple' && pIdx === 0)) {
-                    nameInputs = `
-                        <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
-                        <div style="display:flex; gap:10px; margin-bottom:10px;">
-                            <div style="flex:1;">
-                                <label>姓氏</label>
-                                <input type="text" id="inner-surname-${sIdx}-${pIdx}" value="${p.surname || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'surname', this.value)">
-                            </div>
-                            <div style="flex:1;">
-                                <label>名字</label>
-                                <input type="text" id="inner-given-${sIdx}-${pIdx}" value="${p.givenName || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'givenName', this.value)">
-                            </div>
-                        </div>
-                    `;
-                } else if (sheet.type === 'single-female' || (sheet.type === 'couple' && pIdx === 1)) {
-                    nameInputs = `
-                        <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
-                        <div style="display:flex; gap:10px; margin-bottom:10px;">
-                            <div style="flex:1;">
-                                <label>夫家姓 (無則留空)</label>
-                                <input type="text" id="inner-surname-${sIdx}-${pIdx}" value="${p.surname || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'surname', this.value)">
-                            </div>
-                            <div style="flex:1;">
-                                <label>氏(本家姓)</label>
-                                <input type="text" id="inner-maiden-${sIdx}-${pIdx}" value="${p.maidenName || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'maidenName', this.value)">
-                            </div>
-                            <div style="flex:1;">
-                                <label>名字</label>
-                                <input type="text" id="inner-given-${sIdx}-${pIdx}" value="${p.givenName || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'givenName', this.value)">
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    nameInputs = `
-                        <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
-                        <label>姓名</label>
-                        <input type="text" id="inner-name-${sIdx}-${pIdx}" value="${p.name || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'name', this.value)">
-                    `;
-                }
-
-                pHtml += `
-                    <div class="inner-person-sub-block">
-                        ${nameInputs}
-                        <label>主文 (中) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-m"></span></label>
-                        <input type="text" id="inner-main-${sIdx}-${pIdx}" value="${p.main}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'main', this.value)">
-                        <label>生日 (右) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-b"></span></label>
-                        <input type="text" id="inner-birth-${sIdx}-${pIdx}" value="${p.birth}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'birth', this.value)">
-                        <label>忌日 (左) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-d"></span></label>
-                        <input type="text" id="inner-death-${sIdx}-${pIdx}" value="${p.death}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'death', this.value)">
-                    </div>`;
-            });
-
-            container.innerHTML += `
-                <div class="inner-sheet-block">
-                    <button class="btn-delete-sheet" onclick="deleteSheet(${sIdx})">刪除此片</button>
+            <div id="outer-settings-section">
+                <h2>外牌設定</h2>
+                <div class="form-row">
                     <div class="form-group">
-                        <label>木片 ${sIdx + 1} 格式</label>
-                        <select onchange="changeSheetType(${sIdx}, this.value)">
-                            <option value="single-male" ${sheet.type==='single-male'?'selected':''}>單人 - 個人牌位(男)</option>
-                            <option value="single-female" ${sheet.type==='single-female'?'selected':''}>單人 - 個人牌位(女)</option>
-                            <option value="couple" ${sheet.type==='couple'?'selected':''}>夫妻</option>
-                            <option value="trio" ${sheet.type==='trio'?'selected':''}>三人</option>
+                        <label>牌位類型</label>
+                        <select id="outerType">
+                            <option value="ancestor">歷代祖先牌位</option>
+                            <option value="male">個人牌位(男)</option>
+                            <option value="female">個人牌位(女)</option>
+                            <option value="custom">自定義內容</option>
                         </select>
                     </div>
-                    ${pHtml}
-                </div>`;
-        });
-    }
+                </div>
+                <div class="form-row">
+                    <div class="form-group field-surname">
+                        <label id="lbl-surname">姓氏</label>
+                        <input type="text" id="surname" value="Ｏ">
+                    </div>
+                    <div class="form-group field-maiden" style="display:none;">
+                        <label>氏 (本家姓)</label>
+                        <input type="text" id="maidenName" value="Ｏ">
+                    </div>
+                    <div class="form-group field-given" style="display:none;">
+                        <label>名字</label>
+                        <input type="text" id="givenName" value="〇〇">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>堂號 (橫批) <span class="fortune-tag" id="ft-tanghao"></span></label>
+                    <input type="text" id="tanghao" value="佛 恩">
+                </div>
+                <div class="form-group">
+                    <label>外牌主文 (中行) <span class="fortune-tag" id="ft-outermiddle"></span></label>
+                    <input type="text" id="outerMiddle" value="堂上Ｏ姓歷代祖考妣之神位">
+                </div>
+                <div class="form-group">
+                    <label>奉祀人 (右行) <span class="fortune-tag" id="ft-worship"></span></label>
+                    <input type="text" id="worship" value="陽上子孫奉祀">
+                </div>
+                <div class="form-group">
+                    <label>歲次 (左行) <span class="fortune-tag" id="ft-year"></span></label>
+                    <input type="text" id="year" value="歲次丙午年立">
+                </div>
+            </div>
 
-    function formatTabletText(text) {
-        if (!text) return "";
-        return text.replace(/氏/g, '<span class="char-aside">氏</span>')
-                   .replace(/諱/g, '<span class="char-aside">諱</span>');
-    }
+            <h2 style="margin-top:30px;">內牌管理 (可多片)</h2>
+            <button class="btn-add-sheet" onclick="addInnerSheet()">+ 新增內牌木片</button>
+            <div id="inner-sheets-container"></div>
+        </div>
 
-    function updateAll() {
-        const mode = document.getElementById('displayMode').value;
-        const tabletId = document.getElementById('tabletId').value;
-        const entryDate = document.getElementById('entryDate').value;
-        const staffName = document.getElementById('staffName').value;
-        const notes = document.getElementById('tabletNotes').value;
-        
-        let fullText = `牌位編號：${tabletId}\n入牌日期：${entryDate}\n服務人員：${staffName}\n備註事項：${notes}\n`;
+        <div class="preview-panel">
+            <div class="tabs">
+                <button id="btn-tab-outer" class="tab-btn active" onclick="switchTab('tab-outer', this)">外牌視覺</button>
+                <button id="btn-tab-inner" class="tab-btn" onclick="switchTab('tab-inner', this)">內牌視覺</button>
+                <button class="tab-btn" onclick="switchTab('tab-text', this)">純文字輸出</button>
+            </div>
 
-        if (mode === 'both') {
-            const tanghaoOrig = document.getElementById('tanghao').value;
-            const tanghaoReversed = tanghaoOrig.split('').reverse().join('');
-            const year = document.getElementById('year').value;
-            const outerMiddle = document.getElementById('outerMiddle').value;
-            const worship = document.getElementById('worship').value;
+            <div id="btn-download-container" style="display: flex; justify-content: flex-end; margin-top: 5px; margin-bottom: -5px;">
+                <button class="btn-download-img" onclick="downloadCurrentPreview()" title="下載當前預覽畫面為 PNG 圖片" style="margin-left: auto;">📷 下載圖片</button>
+            </div>
 
-            updateFortuneLabel('ft-tanghao', tanghaoOrig, ['老']);
-            updateFortuneLabel('ft-year', year, ['生']);
-            updateFortuneLabel('ft-outermiddle', outerMiddle, ['老']);
-            updateFortuneLabel('ft-worship', worship, ['生']);
+            <div id="tab-outer" class="preview-content active">
+                <div class="outer-tablet" id="outer-tablet-element">
+                    <div class="tanghao" id="prev-tanghao"></div>
+                    <div class="tablet-body">
+                        <div class="col-right" id="prev-worship"></div>
+                        <div class="col-middle" id="prev-outermiddle"></div>
+                        <div class="col-left" id="prev-year"></div>
+                    </div>
+                </div>
+            </div>
 
-            document.getElementById('prev-tanghao').innerText = tanghaoReversed;
-            // 這裡也套用格式化，確保若左/右聯出現諱或氏也會自動縮小
-            document.getElementById('prev-year').innerHTML = formatTabletText(year);
-            document.getElementById('prev-outermiddle').innerHTML = formatTabletText(outerMiddle);
-            document.getElementById('prev-worship').innerHTML = formatTabletText(worship);
+            <div id="tab-inner" class="preview-content">
+                <div id="prev-inner-container"></div>
+            </div>
 
-            fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${year}\n${outerMiddle}\n${worship}\n`;
-        }
+            <div id="tab-text" class="preview-content" style="flex-direction: column;">
+                <textarea id="text-output" readonly></textarea>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <button class="btn-save" onclick="saveAsTxt()">存為 .txt</button>
+                    <button class="btn-word" onclick="saveAsWord()">存為 .docx</button>
+                    <button class="btn-excel" onclick="saveAsExcel()">存為 .xlsx</button>
+                </div>
+                <button class="btn-copy" onclick="copyText()">複製全文至剪貼簿</button>
+            </div>
+        </div>
+    </div>
 
-        const innerPrevContainer = document.getElementById('prev-inner-container');
-        innerPrevContainer.innerHTML = '';
-        
-        const typeMap = {
-            'single-male': '單人(男)',
-            'single-female': '單人(女)',
-            'couple': '夫妻',
-            'trio': '三人'
-        };
+    <script>
+        const STORAGE_KEY = 'tablet_data_v2';
 
-        innerSheets.forEach((sheet, sIdx) => {
-            const sheetDiv = document.createElement('div');
-            sheetDiv.className = 'inner-tablet';
-            let sheetText = `\n【內牌木片 ${sIdx + 1} - ${typeMap[sheet.type] || sheet.type}】\n`;
+        // 內牌資料結構
+        let innerSheets = [{
+            type: 'single-male',
+            persons: [{
+                name: "陳文華",
+                surname: "陳",
+                maidenName: "",
+                givenName: "文華",
+                main: "顯考陳公諱文華官一位神主",
+                birth: "生於民國三十年二月十五日吉時受生",
+                death: "卒于民國一一二年八月十日吉時別逝"
+            }]
+        }];
 
-            sheet.persons.forEach((p, pIdx) => {
-                updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-m`, p.main, ['老', '生']);
-                updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-b`, p.birth, ['老', '生']);
-                updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-d`, p.death, ['老', '生']);
+        // 當前活動的標籤
+        let currentActiveTab = 'tab-outer';
 
-                const col = document.createElement('div');
-                col.className = 'inner-person-col';
-                col.innerHTML = `<div class="inner-side">${p.death}</div><div class="inner-main">${formatTabletText(p.main)}</div><div class="inner-side">${p.birth}</div>`;
-                sheetDiv.prepend(col); 
+        function init() {
+            document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
+            document.getElementById('surname').addEventListener('input', handleOuterInputChange);
+            document.getElementById('maidenName').addEventListener('input', handleOuterInputChange);
+            document.getElementById('givenName').addEventListener('input', handleOuterInputChange);
+            document.getElementById('uploadExcel').addEventListener('change', handleExcelUpload);
 
-                sheetText += `成員${pIdx+1}(${p.name})：\n${p.birth}\n${p.main}\n${p.death}\n`;
+            document.querySelectorAll(
+                '.settings-panel input:not(#surname):not(#maidenName):not(#givenName), .settings-panel select:not(#outerType), .settings-panel textarea'
+                ).forEach(el => {
+                el.addEventListener('input', updateAll);
+                el.addEventListener('change', updateAll);
             });
 
-            innerPrevContainer.appendChild(sheetDiv);
-            fullText += sheetText;
-        });
+            loadFromLocalStorage();
+            toggleDisplayMode();
+            updateOuterVisibility();
+            renderInnerSheets();
+            updateAll();
 
-        document.getElementById('text-output').value = fullText;
-        saveToLocalStorage();
-    }
+            // 預設顯示外牌視覺
+            switchTab('tab-outer', document.getElementById('btn-tab-outer'));
+        }
 
-    function switchTab(tabId, btn) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.preview-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(tabId).classList.add('active');
-    }
+        function saveToLocalStorage() {
+            const data = {
+                displayMode: document.getElementById('displayMode').value,
+                tabletId: document.getElementById('tabletId').value,
+                entryDate: document.getElementById('entryDate').value,
+                staffName: document.getElementById('staffName').value,
+                tabletNotes: document.getElementById('tabletNotes').value,
+                outerType: document.getElementById('outerType').value,
+                surname: document.getElementById('surname').value,
+                maidenName: document.getElementById('maidenName').value,
+                givenName: document.getElementById('givenName').value,
+                tanghao: document.getElementById('tanghao').value,
+                outerMiddle: document.getElementById('outerMiddle').value,
+                worship: document.getElementById('worship').value,
+                year: document.getElementById('year').value,
+                innerSheets: innerSheets
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
 
-    function copyText() {
-        const area = document.getElementById('text-output');
-        area.select();
-        document.execCommand('copy');
-        alert("已複製全文");
-    }
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    if (data.displayMode) document.getElementById('displayMode').value = data.displayMode;
+                    if (data.tabletId) document.getElementById('tabletId').value = data.tabletId;
+                    if (data.entryDate) document.getElementById('entryDate').value = data.entryDate;
+                    if (data.staffName) document.getElementById('staffName').value = data.staffName;
+                    if (data.tabletNotes) document.getElementById('tabletNotes').value = data.tabletNotes;
+                    if (data.outerType) document.getElementById('outerType').value = data.outerType;
+                    if (data.surname) document.getElementById('surname').value = data.surname;
+                    if (data.maidenName) document.getElementById('maidenName').value = data.maidenName;
+                    if (data.givenName) document.getElementById('givenName').value = data.givenName;
+                    if (data.tanghao) document.getElementById('tanghao').value = data.tanghao;
+                    if (data.outerMiddle) document.getElementById('outerMiddle').value = data.outerMiddle;
+                    if (data.worship) document.getElementById('worship').value = data.worship;
+                    if (data.year) document.getElementById('year').value = data.year;
 
-    function handleExcelUpload(e) {
-        const file = e.target.files[0];
-        if (!file) return;
+                    if (data.innerSheets && Array.isArray(data.innerSheets)) {
+                        innerSheets = data.innerSheets.map(sheet => {
+                            if (sheet.type === 'single') sheet.type = 'single-male';
+                            return sheet;
+                        });
+                    }
+                } catch (error) {
+                    console.error("讀取暫存資料失敗:", error);
+                }
+            }
+        }
 
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            const data = evt.target.result;
-            const workbook = XLSX.read(data, { type: 'binary' });
-            const sheetName = workbook.SheetNames[0];
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+        function clearLocalStorage() {
+            if (confirm("確定要清除目前所有的編輯內容並恢復預設嗎？(將無法復原)")) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+
+        function toggleDisplayMode() {
+            const mode = document.getElementById('displayMode').value;
+            const outerSection = document.getElementById('outer-settings-section');
+            const outerTabBtn = document.getElementById('btn-tab-outer');
+
+            if (mode === 'innerOnly') {
+                outerSection.classList.add('mode-hidden');
+                outerTabBtn.classList.add('hidden');
+                // 如果當前是外牌標籤，切換到內牌
+                if (currentActiveTab === 'tab-outer') {
+                    switchTab('tab-inner', document.getElementById('btn-tab-inner'));
+                }
+            } else {
+                outerSection.classList.remove('mode-hidden');
+                outerTabBtn.classList.remove('hidden');
+            }
+            updateAll();
+        }
+
+        function getFortune(text) {
+            if (!text) return '';
+            const cleanStr = text.replace(/[\s\p{P}]/gu, '');
+            const len = cleanStr.length;
+            if (len === 0) return '';
+            const fortunes = ['苦', '生', '老', '病', '死'];
+            return `${len}字(${fortunes[len % 5]})`;
+        }
+
+        function updateFortuneLabel(elementId, text, targetFortunes) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const fortuneStr = getFortune(text);
+            el.textContent = fortuneStr;
+            const isLucky = targetFortunes.some(t => fortuneStr.includes(t));
+            el.style.color = isLucky ? '#4CAF50' : '#d32f2f';
+        }
+
+        function updateOuterVisibility() {
+            const type = document.getElementById('outerType').value;
+            const maidenField = document.querySelector('.field-maiden');
+            const givenField = document.querySelector('.field-given');
+            const lblSurname = document.getElementById('lbl-surname');
+
+            if (type === 'ancestor') {
+                maidenField.style.display = 'none';
+                givenField.style.display = 'none';
+                lblSurname.textContent = '姓氏';
+            } else if (type === 'male') {
+                maidenField.style.display = 'none';
+                givenField.style.display = 'block';
+                lblSurname.textContent = '姓氏';
+            } else if (type === 'female') {
+                maidenField.style.display = 'block';
+                givenField.style.display = 'block';
+                lblSurname.textContent = '夫家姓 (無則留空)';
+            } else {
+                maidenField.style.display = 'none';
+                givenField.style.display = 'none';
+                lblSurname.textContent = '姓氏';
+            }
+        }
+
+        function updateOuterMiddleText() {
+            const type = document.getElementById('outerType').value;
+            if (type === 'custom') return;
+
+            const surname = document.getElementById('surname').value.trim();
+            const maidenName = document.getElementById('maidenName').value.trim() || 'Ｏ';
+            const givenName = document.getElementById('givenName').value.trim() || '〇〇';
+            const middleInput = document.getElementById('outerMiddle');
+
+            const safeSurname = surname || 'Ｏ';
+
+            if (type === 'ancestor') {
+                middleInput.value = `堂上${safeSurname}姓歷代祖考妣之神位`;
+            } else if (type === 'male') {
+                middleInput.value = `顯考${safeSurname}公諱${givenName}官一位神主`;
+            } else if (type === 'female') {
+                const husbandStr = surname ? `${surname}門` : '';
+                middleInput.value = `顯妣${husbandStr}${maidenName}氏${givenName}娘之神主`;
+            }
+        }
+
+        function handleOuterInputChange() {
+            updateOuterMiddleText();
+            const outerType = document.getElementById('outerType').value;
+            if (innerSheets.length > 0) {
+                const firstSheet = innerSheets[0];
+                const p = firstSheet.persons[0];
+                if (outerType === 'male' && firstSheet.type === 'single-male') {
+                    p.surname = document.getElementById('surname').value;
+                    p.givenName = document.getElementById('givenName').value;
+                    updateInnerMainText(0, 0);
+                    const snInput = document.getElementById(`inner-surname-0-0`);
+                    if (snInput) snInput.value = p.surname;
+                    const gnInput = document.getElementById(`inner-given-0-0`);
+                    if (gnInput) gnInput.value = p.givenName;
+                    const mainInput = document.getElementById(`inner-main-0-0`);
+                    if (mainInput) mainInput.value = p.main;
+                } else if (outerType === 'female' && firstSheet.type === 'single-female') {
+                    p.surname = document.getElementById('surname').value;
+                    p.maidenName = document.getElementById('maidenName').value;
+                    p.givenName = document.getElementById('givenName').value;
+                    updateInnerMainText(0, 0);
+                    const snInput = document.getElementById(`inner-surname-0-0`);
+                    if (snInput) snInput.value = p.surname;
+                    const mnInput = document.getElementById(`inner-maiden-0-0`);
+                    if (mnInput) mnInput.value = p.maidenName;
+                    const gnInput = document.getElementById(`inner-given-0-0`);
+                    if (gnInput) gnInput.value = p.givenName;
+                    const mainInput = document.getElementById(`inner-main-0-0`);
+                    if (mainInput) mainInput.value = p.main;
+                }
+            }
+            updateAll();
+        }
+
+        function handleOuterTypeChange() {
+            updateOuterVisibility();
+            updateOuterMiddleText();
+            const outerType = document.getElementById('outerType').value;
+            if (innerSheets.length > 0) {
+                const p = innerSheets[0].persons[0];
+                if (outerType === 'male') {
+                    innerSheets[0].type = 'single-male';
+                    innerSheets[0].persons = innerSheets[0].persons.slice(0, 1);
+                    p.surname = document.getElementById('surname').value;
+                    p.givenName = document.getElementById('givenName').value;
+                    updateInnerMainText(0, 0);
+                } else if (outerType === 'female') {
+                    innerSheets[0].type = 'single-female';
+                    innerSheets[0].persons = innerSheets[0].persons.slice(0, 1);
+                    p.surname = document.getElementById('surname').value;
+                    p.maidenName = document.getElementById('maidenName').value;
+                    p.givenName = document.getElementById('givenName').value;
+                    updateInnerMainText(0, 0);
+                }
+            }
+            renderInnerSheets();
+            updateAll();
+        }
+
+        function addInnerSheet() {
+            innerSheets.push({
+                type: 'single-male',
+                persons: [{ name: "", surname: "", maidenName: "", givenName: "", main: "", birth: "生於", death: "卒于" }]
+            });
+            renderInnerSheets();
+            updateAll();
+        }
+
+        function deleteSheet(idx) {
+            if (innerSheets.length <= 1) return alert("至少需保留一片內牌。");
+            if (!confirm("確定要刪除這片內牌嗎？")) return;
+            innerSheets.splice(idx, 1);
+            renderInnerSheets();
+            updateAll();
+        }
+
+        function changeSheetType(idx, type) {
+            const count = (type === 'single-male' || type === 'single-female') ? 1 : (type === 'couple' ? 2 : 3);
+            const newPersons = [];
+            for (let i = 0; i < count; i++) {
+                newPersons.push(innerSheets[idx].persons[i] || { name: "", surname: "", maidenName: "",
+                    givenName: "", main: "", birth: "生於", death: "卒于" });
+            }
+            innerSheets[idx].type = type;
+            innerSheets[idx].persons = newPersons;
+
+            if (idx === 0) {
+                const outerType = document.getElementById('outerType').value;
+                if (type === 'single-male' && outerType === 'male') {
+                    innerSheets[idx].persons[0].surname = document.getElementById('surname').value;
+                    innerSheets[idx].persons[0].givenName = document.getElementById('givenName').value;
+                    updateInnerMainText(idx, 0);
+                } else if (type === 'single-female' && outerType === 'female') {
+                    innerSheets[idx].persons[0].surname = document.getElementById('surname').value;
+                    innerSheets[idx].persons[0].maidenName = document.getElementById('maidenName').value;
+                    innerSheets[idx].persons[0].givenName = document.getElementById('givenName').value;
+                    updateInnerMainText(idx, 0);
+                }
+            }
+
+            if (type === 'couple') {
+                updateInnerMainText(idx, 0);
+                updateInnerMainText(idx, 1);
+            }
+
+            renderInnerSheets();
+            updateAll();
+        }
+
+        function updateInnerMainText(sIdx, pIdx) {
+            const sheet = innerSheets[sIdx];
+            const p = sheet.persons[pIdx];
+
+            if (sheet.type === 'single-male' || (sheet.type === 'couple' && pIdx === 0)) {
+                const safeSurname = p.surname ? p.surname.trim() : 'Ｏ';
+                const safeGiven = p.givenName ? p.givenName.trim() : '〇〇';
+                p.main = `顯考${safeSurname}公諱${safeGiven}官一位神主`;
+                p.name = `${safeSurname}${safeGiven}`;
+            } else if (sheet.type === 'single-female' || (sheet.type === 'couple' && pIdx === 1)) {
+                const safeSurname = p.surname ? p.surname.trim() : '';
+                const safeMaiden = p.maidenName ? p.maidenName.trim() : 'Ｏ';
+                const safeGiven = p.givenName ? p.givenName.trim() : '〇〇';
+                const husbandStr = safeSurname ? `${safeSurname}門` : '';
+                p.main = `顯妣${husbandStr}${safeMaiden}氏${safeGiven}娘之神主`;
+                p.name = `${safeSurname}${safeMaiden}${safeGiven}`;
+            }
+        }
+
+        function syncInnerData(sheetIdx, personIdx, field, val) {
+            const p = innerSheets[sheetIdx].persons[personIdx];
+            p[field] = val;
+
+            if (field === 'surname' || field === 'maidenName' || field === 'givenName') {
+                updateInnerMainText(sheetIdx, personIdx);
+                const mainInput = document.getElementById(`inner-main-${sheetIdx}-${personIdx}`);
+                if (mainInput) mainInput.value = p.main;
+            }
+            updateAll();
+        }
+
+        function renderInnerSheets() {
+            const container = document.getElementById('inner-sheets-container');
+            container.innerHTML = '';
+
+            innerSheets.forEach((sheet, sIdx) => {
+                let pHtml = '';
+                sheet.persons.forEach((p, pIdx) => {
+                    let nameInputs = '';
+                    let headerLabel = sheet.type === 'couple' ? (pIdx === 0 ? `成員 ${pIdx + 1} (男)` :
+                        `成員 ${pIdx + 1} (女)`) : `成員 ${pIdx + 1}`;
+
+                    if (sheet.type === 'single-male' || (sheet.type === 'couple' && pIdx === 0)) {
+                        nameInputs = `
+                            <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
+                            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                                <div style="flex:1;">
+                                    <label>姓氏</label>
+                                    <input type="text" id="inner-surname-${sIdx}-${pIdx}" value="${p.surname || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'surname', this.value)">
+                                </div>
+                                <div style="flex:1;">
+                                    <label>名字</label>
+                                    <input type="text" id="inner-given-${sIdx}-${pIdx}" value="${p.givenName || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'givenName', this.value)">
+                                </div>
+                            </div>
+                        `;
+                    } else if (sheet.type === 'single-female' || (sheet.type === 'couple' && pIdx === 1)) {
+                        nameInputs = `
+                            <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
+                            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                                <div style="flex:1;">
+                                    <label>夫家姓 (無則留空)</label>
+                                    <input type="text" id="inner-surname-${sIdx}-${pIdx}" value="${p.surname || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'surname', this.value)">
+                                </div>
+                                <div style="flex:1;">
+                                    <label>氏(本家姓)</label>
+                                    <input type="text" id="inner-maiden-${sIdx}-${pIdx}" value="${p.maidenName || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'maidenName', this.value)">
+                                </div>
+                                <div style="flex:1;">
+                                    <label>名字</label>
+                                    <input type="text" id="inner-given-${sIdx}-${pIdx}" value="${p.givenName || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'givenName', this.value)">
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        nameInputs = `
+                            <label style="color:#6b4423; border-bottom:1px solid #eee; padding-bottom:3px; margin-bottom:8px; display:block;">${headerLabel}</label>
+                            <label>姓名</label>
+                            <input type="text" id="inner-name-${sIdx}-${pIdx}" value="${p.name || ''}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'name', this.value)">
+                        `;
+                    }
+
+                    pHtml += `
+                        <div class="inner-person-sub-block">
+                            ${nameInputs}
+                            <label>主文 (中) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-m"></span></label>
+                            <input type="text" id="inner-main-${sIdx}-${pIdx}" value="${p.main}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'main', this.value)">
+                            <label>生日 (右) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-b"></span></label>
+                            <input type="text" id="inner-birth-${sIdx}-${pIdx}" value="${p.birth}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'birth', this.value)">
+                            <label>忌日 (左) <span class="fortune-tag" id="ft-s${sIdx}-p${pIdx}-d"></span></label>
+                            <input type="text" id="inner-death-${sIdx}-${pIdx}" value="${p.death}" oninput="syncInnerData(${sIdx}, ${pIdx}, 'death', this.value)">
+                        </div>`;
+                });
+
+                container.innerHTML += `
+                    <div class="inner-sheet-block">
+                        <button class="btn-delete-sheet" onclick="deleteSheet(${sIdx})">刪除此片</button>
+                        <div class="form-group">
+                            <label>木片 ${sIdx + 1} 格式</label>
+                            <select onchange="changeSheetType(${sIdx}, this.value)">
+                                <option value="single-male" ${sheet.type==='single-male'?'selected':''}>單人 - 個人牌位(男)</option>
+                                <option value="single-female" ${sheet.type==='single-female'?'selected':''}>單人 - 個人牌位(女)</option>
+                                <option value="couple" ${sheet.type==='couple'?'selected':''}>夫妻</option>
+                                <option value="trio" ${sheet.type==='trio'?'selected':''}>三人</option>
+                            </select>
+                        </div>
+                        ${pHtml}
+                    </div>`;
+            });
+        }
+
+        function formatTabletText(text) {
+            if (!text) return "";
+            return text.replace(/氏/g, '<span class="char-aside">氏</span>')
+                .replace(/諱/g, '<span class="char-aside">諱</span>');
+        }
+
+        function updateAll() {
+            const mode = document.getElementById('displayMode').value;
+            const tabletId = document.getElementById('tabletId').value;
+            const entryDate = document.getElementById('entryDate').value;
+            const staffName = document.getElementById('staffName').value;
+            const notes = document.getElementById('tabletNotes').value;
+
+            let fullText =
+                `牌位編號：${tabletId}\n入牌日期：${entryDate}\n服務人員：${staffName}\n備註事項：${notes}\n`;
+
+            if (mode === 'both') {
+                const tanghaoOrig = document.getElementById('tanghao').value;
+                const tanghaoReversed = tanghaoOrig.split('').reverse().join('');
+                const year = document.getElementById('year').value;
+                const outerMiddle = document.getElementById('outerMiddle').value;
+                const worship = document.getElementById('worship').value;
+
+                updateFortuneLabel('ft-tanghao', tanghaoOrig, ['老']);
+                updateFortuneLabel('ft-year', year, ['生']);
+                updateFortuneLabel('ft-outermiddle', outerMiddle, ['老']);
+                updateFortuneLabel('ft-worship', worship, ['生']);
+
+                document.getElementById('prev-tanghao').innerText = tanghaoReversed;
+                document.getElementById('prev-year').innerHTML = formatTabletText(year);
+                document.getElementById('prev-outermiddle').innerHTML = formatTabletText(outerMiddle);
+                document.getElementById('prev-worship').innerHTML = formatTabletText(worship);
+
+                fullText += `\n【外牌】\n堂號：${tanghaoOrig}\n${year}\n${outerMiddle}\n${worship}\n`;
+            }
+
+            const innerPrevContainer = document.getElementById('prev-inner-container');
+            innerPrevContainer.innerHTML = '';
+
+            const typeMap = {
+                'single-male': '單人(男)',
+                'single-female': '單人(女)',
+                'couple': '夫妻',
+                'trio': '三人'
+            };
+
+            innerSheets.forEach((sheet, sIdx) => {
+                const sheetDiv = document.createElement('div');
+                sheetDiv.className = 'inner-tablet';
+                let sheetText =
+                    `\n【內牌木片 ${sIdx + 1} - ${typeMap[sheet.type] || sheet.type}】\n`;
+
+                sheet.persons.forEach((p, pIdx) => {
+                    updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-m`, p.main, ['老', '生']);
+                    updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-b`, p.birth, ['老', '生']);
+                    updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-d`, p.death, ['老', '生']);
+
+                    const col = document.createElement('div');
+                    col.className = 'inner-person-col';
+                    col.innerHTML =
+                        `<div class="inner-side">${p.death}</div><div class="inner-main">${formatTabletText(p.main)}</div><div class="inner-side">${p.birth}</div>`;
+                    sheetDiv.appendChild(col);
+
+                    sheetText +=
+                        `成員${pIdx+1}(${p.name})：\n${p.birth}\n${p.main}\n${p.death}\n`;
+                });
+
+                innerPrevContainer.appendChild(sheetDiv);
+                fullText += sheetText;
+            });
+
+            document.getElementById('text-output').value = fullText;
+            saveToLocalStorage();
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.preview-content').forEach(c => c.classList.remove('active'));
+
+            // 只對標籤按鈕添加 active（不包括下載按鈕）
+            if (btn && btn.classList.contains('tab-btn')) {
+                btn.classList.add('active');
+            }
+            document.getElementById(tabId).classList.add('active');
+            currentActiveTab = tabId;
+
+            // 更新標籤按鈕的 active 狀態
+            const tabBtnMap = {
+                'tab-outer': 'btn-tab-outer',
+                'tab-inner': 'btn-tab-inner',
+                'tab-text': null
+            };
+            const targetBtnId = tabBtnMap[tabId];
+            if (targetBtnId) {
+                document.getElementById(targetBtnId).classList.add('active');
+            }
+            // 對於純文字輸出，找到對應的按鈕
+            if (tabId === 'tab-text') {
+                const textBtn = document.querySelector('.tabs .tab-btn:nth-child(3)');
+                if (textBtn) textBtn.classList.add('active');
+            }
+
+            // 【新功能】連動控制下載按鈕容器的顯示與隱藏（僅在外牌、內牌視覺上方顯示）
+            const downloadContainer = document.getElementById('btn-download-container');
+            if (downloadContainer) {
+                if (tabId === 'tab-text') {
+                    downloadContainer.style.display = 'none';
+                } else {
+                    downloadContainer.style.display = 'flex';
+                }
+            }
+        }
+
+        function copyText() {
+            const area = document.getElementById('text-output');
+            area.select();
+            document.execCommand('copy');
+            alert("已複製全文");
+        }
+
+        // ========== 圖片下載功能 ==========
+
+        /**
+         * 根據當前活動的標籤，下載對應的預覽圖片
+         * - 外牌視覺：精確截取 .outer-tablet 元素
+         * - 內牌視覺：精確截取 #prev-inner-container 元素
+         * - 純文字輸出：提示用戶切換標籤
+         */
+        async function downloadCurrentPreview() {
+            const tabletId = document.getElementById('tabletId').value || '未命名';
+            const entryDate = document.getElementById('entryDate').value || '無日期';
+            const baseFilename = `${tabletId}_${entryDate}`;
+
+            if (currentActiveTab === 'tab-outer') {
+                await downloadElementImage(
+                    document.getElementById('outer-tablet-element'),
+                    `外牌_${baseFilename}.png`,
+                    null // 外牌有自身背景，不需要額外背景色
+                );
+            } else if (currentActiveTab === 'tab-inner') {
+                const innerContainer = document.getElementById('prev-inner-container');
+                if (!innerContainer || innerContainer.children.length === 0) {
+                    alert('目前沒有內牌木片可供下載。');
+                    return;
+                }
+                await downloadElementImage(
+                    innerContainer,
+                    `內牌_${baseFilename}.png`,
+                    '#ffffff' // 內牌容器需要白色背景
+                );
+            } else if (currentActiveTab === 'tab-text') {
+                alert('請先切換到「外牌視覺」或「內牌視覺」標籤，再下載圖片。');
+            }
+        }
+
+        /**
+         * 使用 html-to-image 庫精確截取指定 DOM 元素，並觸發下載
+         * @param {HTMLElement} element - 要截取的目標元素
+         * @param {string} filename - 下載檔案名稱
+         * @param {string|null} backgroundColor - 背景色 (如 '#ffffff')，null 表示保留透明
+         */
+        async function downloadElementImage(element, filename, backgroundColor) {
+            if (!element) {
+                alert('找不到要下載的預覽元素，請重新整理頁面。');
+                return;
+            }
+
+            // 顯示載入提示
+            const downloadBtn = document.querySelector('.btn-download-img');
+            const originalText = downloadBtn ? downloadBtn.textContent : '';
+            if (downloadBtn) {
+                downloadBtn.textContent = '⏳ 處理中...';
+                downloadBtn.disabled = true;
+            }
 
             try {
-                document.getElementById('tabletId').value = rows[1][1] || "";
-                document.getElementById('entryDate').value = rows[2][1] || "";
-                document.getElementById('staffName').value = rows[3][1] || "";
-                document.getElementById('tabletNotes').value = rows[4][1] || "";
+                // 使用 html-to-image 的 toPng 方法
+                // pixelRatio: 2 確保高解析度輸出
+                // 精確截取元素的矩形範圍，不包含任何外部留白
+                const options = {
+                    pixelRatio: 2,
+                    // 明確指定背景色處理
+                    backgroundColor: backgroundColor,
+                    // 確保 CSS 屬性完整渲染
+                    cacheBust: true,
+                };
 
-                innerSheets = [];
+                const dataUrl = await htmlToImage.toPng(element, options);
 
-                for (let i = 0; i < rows.length; i++) {
-                    const firstCell = String(rows[i][0] || "");
-                    
-                    if (firstCell.includes("【外牌部分】")) {
-                        document.getElementById('displayMode').value = "both";
-                        document.getElementById('tanghao').value = rows[i+2][1] || "";
-                        document.getElementById('year').value = rows[i+3][1] || "";
-                        document.getElementById('outerMiddle').value = rows[i+4][1] || "";
-                        document.getElementById('worship').value = rows[i+5][1] || "";
-                    }
+                // 觸發下載
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
 
-                    if (firstCell.includes("木片")) {
-                        const typeMatch = firstCell.match(/\((.*?)\)/);
-                        const typeStr = typeMatch ? typeMatch[1] : "single-male";
-                        
-                        let type = 'single-male';
-                        if (typeStr.includes('女') || typeStr === 'single-female') type = 'single-female';
-                        else if (typeStr.includes('男') || typeStr === 'single-male' || typeStr === 'single') type = 'single-male';
-                        else if (typeStr.includes('夫妻') || typeStr === 'couple') type = 'couple';
-                        else if (typeStr.includes('三人') || typeStr === 'trio') type = 'trio';
-
-                        const personCount = (type === 'single-male' || type === 'single-female' ? 1 : (type === 'couple' ? 2 : 3));
-                        
-                        let persons = [];
-                        for (let j = 1; j <= personCount; j++) {
-                            const pRow = rows[i + 1 + j];
-                            if (pRow) {
-                                persons.push({
-                                    name: pRow[1] || "",
-                                    surname: "", maidenName: "", givenName: "", 
-                                    birth: (pRow[2] || "").split(' [')[0],
-                                    main: (pRow[3] || "").split(' [')[0],
-                                    death: (pRow[4] || "").split(' [')[0]
-                                });
-                            }
-                        }
-                        innerSheets.push({ type, persons });
-                    }
+            } catch (error) {
+                console.error('下載圖片失敗:', error);
+                // 嘗試使用備用方案：html2canvas 風格的手動截圖
+                alert('下載圖片時發生錯誤，請稍後再試。\n\n若問題持續，請嘗試：\n1. 重新整理頁面\n2. 使用 Chrome 或 Edge 瀏覽器\n3. 檢查瀏覽器是否封鎖了下載視窗');
+            } finally {
+                // 恢復按鈕狀態
+                if (downloadBtn) {
+                    downloadBtn.textContent = originalText || '📷 下載圖片';
+                    downloadBtn.disabled = false;
                 }
-                
-                if (innerSheets.length === 0) {
-                    innerSheets = [{ type: 'single-male', persons: [{ name: "", surname: "", maidenName: "", givenName: "", main: "", birth: "生於", death: "卒于" }] }];
-                }
-
-                alert("資料讀取成功！");
-                toggleDisplayMode();
-                updateOuterVisibility();
-                renderInnerSheets();
-                updateAll();
-            } catch (err) {
-                console.error(err);
-                alert("檔案格式不符，請確保上傳的是由本工具導出的 Excel 檔案。");
             }
-        };
-        reader.readAsBinaryString(file);
-    }
-
-    function saveAsTxt() {
-        const text = document.getElementById('text-output').value;
-        const tabletId = document.getElementById('tabletId').value || "未命名牌位";
-        const entryDate = document.getElementById('entryDate').value || "無日期";
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `${tabletId}_${entryDate}.txt`;
-        link.href = url;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
-
-    function saveAsWord() {
-        const text = document.getElementById('text-output').value;
-        const tabletId = document.getElementById('tabletId').value || "未命名";
-        const entryDate = document.getElementById('entryDate').value || "無日期";
-        const formattedText = text.replace(/\n/g, '<br>');
-        const content = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Export Word</title></head>
-            <body style="font-family: 'MS Ungothic', '標楷體';">
-                <h2>神主牌位排字資料</h2>
-                <div style="font-size: 12pt; line-height: 1.5;">
-                    ${formattedText}
-                </div>
-            </body>
-            </html>
-        `;
-        const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${tabletId}_${entryDate}.doc`;
-        link.click();
-        URL.revokeObjectURL(url);
-    }
-
-    function saveAsExcel() {
-        const tabletId = document.getElementById('tabletId').value || "未命名";
-        const entryDate = document.getElementById('entryDate').value || "無日期";
-        const staffName = document.getElementById('staffName').value || "";
-        const notes = document.getElementById('tabletNotes').value || "";
-        let data = [["牌位資訊管理表"], ["牌位編號", tabletId], ["入牌日期", entryDate], ["服務人員", staffName], ["備註事項", notes], []];
-        
-        if (document.getElementById('displayMode').value === 'both') {
-            data.push(["【外牌部分】"]);
-            data.push(["位置", "內容", "吉凶判定"]);
-            data.push(["堂號", document.getElementById('tanghao').value, getFortune(document.getElementById('tanghao').value)]);
-            data.push(["歲次", document.getElementById('year').value, getFortune(document.getElementById('year').value)]);
-            data.push(["主文", document.getElementById('outerMiddle').value, getFortune(document.getElementById('outerMiddle').value)]);
-            data.push(["奉祀人", document.getElementById('worship').value, getFortune(document.getElementById('worship').value)]);
-            data.push([]);
         }
-        
-        const typeMap = {
-            'single-male': '單人(男)',
-            'single-female': '單人(女)',
-            'couple': '夫妻',
-            'trio': '三人'
-        };
 
-        data.push(["【內牌木片資料】"]);
-        innerSheets.forEach((sheet, sIdx) => {
-            data.push([`木片 ${sIdx + 1} (${typeMap[sheet.type] || sheet.type})`]);
-            data.push(["成員", "姓名", "生日", "主文", "忌日"]);
-            sheet.persons.forEach((p, pIdx) => {
-                data.push([`成員 ${pIdx + 1}`, p.name, `${p.birth} [${getFortune(p.birth)}]`, `${p.main} [${getFortune(p.main)}]`, `${p.death} [${getFortune(p.death)}]`]);
+        // ========== Excel 匯入匯出 ==========
+
+        function handleExcelUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = evt.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+
+                try {
+                    document.getElementById('tabletId').value = rows[1][1] || "";
+                    document.getElementById('entryDate').value = rows[2][1] || "";
+                    document.getElementById('staffName').value = rows[3][1] || "";
+                    document.getElementById('tabletNotes').value = rows[4][1] || "";
+
+                    innerSheets = [];
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const firstCell = String(rows[i][0] || "");
+
+                        if (firstCell.includes("【外牌部分】")) {
+                            document.getElementById('displayMode').value = "both";
+                            document.getElementById('tanghao').value = rows[i + 2][1] || "";
+                            document.getElementById('year').value = rows[i + 3][1] || "";
+                            document.getElementById('outerMiddle').value = rows[i + 4][1] || "";
+                            document.getElementById('worship').value = rows[i + 5][1] || "";
+                        }
+
+                        if (firstCell.includes("木片")) {
+                            const typeMatch = firstCell.match(/\((.*?)\)/);
+                            const typeStr = typeMatch ? typeMatch[1] : "single-male";
+
+                            let type = 'single-male';
+                            if (typeStr.includes('女') || typeStr === 'single-female') type =
+                                'single-female';
+                            else if (typeStr.includes('男') || typeStr === 'single-male' || typeStr ===
+                                'single') type = 'single-male';
+                            else if (typeStr.includes('夫妻') || typeStr === 'couple') type = 'couple';
+                            else if (typeStr.includes('三人') || typeStr === 'trio') type = 'trio';
+
+                            const personCount = (type === 'single-male' || type === 'single-female' ? 1 : (
+                                type === 'couple' ? 2 : 3));
+
+                            let persons = [];
+                            for (let j = 1; j <= personCount; j++) {
+                                const pRow = rows[i + 1 + j];
+                                if (pRow) {
+                                    persons.push({
+                                        name: pRow[1] || "",
+                                        surname: "",
+                                        maidenName: "",
+                                        givenName: "",
+                                        birth: (pRow[2] || "").split(' [')[0],
+                                        main: (pRow[3] || "").split(' [')[0],
+                                        death: (pRow[4] || "").split(' [')[0]
+                                    });
+                                }
+                            }
+                            innerSheets.push({ type, persons });
+                        }
+                    }
+
+                    if (innerSheets.length === 0) {
+                        innerSheets = [{ type: 'single-male', persons: [{ name: "", surname: "",
+                                maidenName: "", givenName: "", main: "", birth: "生於", death: "卒于" }] }];
+                    }
+
+                    alert("資料讀取成功！");
+                    toggleDisplayMode();
+                    updateOuterVisibility();
+                    renderInnerSheets();
+                    updateAll();
+                    // 切換到外牌視覺
+                    switchTab('tab-outer', document.getElementById('btn-tab-outer'));
+                } catch (err) {
+                    console.error(err);
+                    alert("檔案格式不符，請確保上傳的是由本工具導出的 Excel 檔案。");
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        function saveAsTxt() {
+            const text = document.getElementById('text-output').value;
+            const tabletId = document.getElementById('tabletId').value || "未命名牌位";
+            const entryDate = document.getElementById('entryDate').value || "無日期";
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `${tabletId}_${entryDate}.txt`;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function saveAsWord() {
+            const text = document.getElementById('text-output').value;
+            const tabletId = document.getElementById('tabletId').value || "未命名";
+            const entryDate = document.getElementById('entryDate').value || "無日期";
+            const formattedText = text.replace(/\n/g, '<br>');
+            const content = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head><meta charset='utf-8'><title>Export Word</title></head>
+                <body style="font-family: 'MS Ungothic', '標楷體';">
+                    <h2>神主牌位排字資料</h2>
+                    <div style="font-size: 12pt; line-height: 1.5;">
+                        ${formattedText}
+                    </div>
+                </body>
+                </html>
+            `;
+            const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${tabletId}_${entryDate}.doc`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function saveAsExcel() {
+            const tabletId = document.getElementById('tabletId').value || "未命名";
+            const entryDate = document.getElementById('entryDate').value || "無日期";
+            const staffName = document.getElementById('staffName').value || "";
+            const notes = document.getElementById('tabletNotes').value || "";
+            let data = [
+                ["牌位資訊管理表"],
+                ["牌位編號", tabletId],
+                ["入牌日期", entryDate],
+                ["服務人員", staffName],
+                ["備註事項", notes],
+                []
+            ];
+
+            if (document.getElementById('displayMode').value === 'both') {
+                data.push(["【外牌部分】"]);
+                data.push(["位置", "內容", "吉凶判定"]);
+                data.push(["堂號", document.getElementById('tanghao').value, getFortune(document.getElementById(
+                    'tanghao').value)]);
+                data.push(["歲次", document.getElementById('year').value, getFortune(document.getElementById('year')
+                    .value)]);
+                data.push(["主文", document.getElementById('outerMiddle').value, getFortune(document.getElementById(
+                    'outerMiddle').value)]);
+                data.push(["奉祀人", document.getElementById('worship').value, getFortune(document.getElementById(
+                    'worship').value)]);
+                data.push([]);
+            }
+
+            const typeMap = {
+                'single-male': '單人(男)',
+                'single-female': '單人(女)',
+                'couple': '夫妻',
+                'trio': '三人'
+            };
+
+            data.push(["【內牌木片資料】"]);
+            innerSheets.forEach((sheet, sIdx) => {
+                data.push([`木片 ${sIdx + 1} (${typeMap[sheet.type] || sheet.type})`]);
+                data.push(["成員", "姓名", "生日", "主文", "忌日"]);
+                sheet.persons.forEach((p, pIdx) => {
+                    data.push([`成員 ${pIdx + 1}`, p.name, `${p.birth} [${getFortune(p.birth)}]`,
+                        `${p.main} [${getFortune(p.main)}]`, `${p.death} [${getFortune(p.death)}]`
+                    ]);
+                });
+                data.push([]);
             });
-            data.push([]);
-        });
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(data);
-        XLSX.utils.book_append_sheet(wb, ws, "牌位排字資料");
-        XLSX.writeFile(wb, `${tabletId}_${entryDate}.xlsx`);
-    }
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, "牌位排字資料");
+            XLSX.writeFile(wb, `${tabletId}_${entryDate}.xlsx`);
+        }
 
-    window.onload = init;
-</script>
-
+        window.onload = init;
+    </script>
 </body>
 </html>
