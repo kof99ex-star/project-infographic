@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>神主牌位助手 - by瑋志 (第27版_下載圖片_修正版)</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js">
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <style>
         :root {
             --wood-bg: linear-gradient(135deg, #d2a679 0%, #b37746 100%);
@@ -1064,9 +1062,11 @@
             innerSheets.forEach((sheet, sIdx) => {
                 const sheetDiv = document.createElement('div');
                 sheetDiv.className = 'inner-tablet';
+
                 let sheetText =
                     `\n【內牌木片 ${sIdx + 1} - ${typeMap[sheet.type] || sheet.type}】\n`;
 
+                const cols = [];
                 sheet.persons.forEach((p, pIdx) => {
                     updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-m`, p.main, ['老', '生']);
                     updateFortuneLabel(`ft-s${sIdx}-p${pIdx}-b`, p.birth, ['老', '生']);
@@ -1076,11 +1076,20 @@
                     col.className = 'inner-person-col';
                     col.innerHTML =
                         `<div class="inner-side">${p.death}</div><div class="inner-main">${formatTabletText(p.main)}</div><div class="inner-side">${p.birth}</div>`;
-                    sheetDiv.appendChild(col);
+                    
+                    cols.push(col);
 
                     sheetText +=
                         `成員${pIdx+1}(${p.name})：\n${p.birth}\n${p.main}\n${p.death}\n`;
                 });
+
+                // 如果是夫妻或三人格式，反轉欄位元件陣列以達到左右視覺互換效果（並自然修正 CSS :last-child 的邊框問題）
+                if (sheet.type === 'couple' || sheet.type === 'trio') {
+                    cols.reverse();
+                }
+
+                // 依序將欄位元件加入木片容器中
+                cols.forEach(col => sheetDiv.appendChild(col));
 
                 innerPrevContainer.appendChild(sheetDiv);
                 fullText += sheetText;
@@ -1094,14 +1103,12 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.preview-content').forEach(c => c.classList.remove('active'));
 
-            // 只對標籤按鈕添加 active（不包括下載按鈕）
             if (btn && btn.classList.contains('tab-btn')) {
                 btn.classList.add('active');
             }
             document.getElementById(tabId).classList.add('active');
             currentActiveTab = tabId;
 
-            // 更新標籤按鈕的 active 狀態
             const tabBtnMap = {
                 'tab-outer': 'btn-tab-outer',
                 'tab-inner': 'btn-tab-inner',
@@ -1111,13 +1118,11 @@
             if (targetBtnId) {
                 document.getElementById(targetBtnId).classList.add('active');
             }
-            // 對於純文字輸出，找到對應的按鈕
             if (tabId === 'tab-text') {
                 const textBtn = document.querySelector('.tabs .tab-btn:nth-child(3)');
                 if (textBtn) textBtn.classList.add('active');
             }
 
-            // 【新功能】連動控制下載按鈕容器的顯示與隱藏（僅在外牌、內牌視覺上方顯示）
             const downloadContainer = document.getElementById('btn-download-container');
             if (downloadContainer) {
                 if (tabId === 'tab-text') {
@@ -1137,12 +1142,6 @@
 
         // ========== 圖片下載功能 ==========
 
-        /**
-         * 根據當前活動的標籤，下載對應的預覽圖片
-         * - 外牌視覺：精確截取 .outer-tablet 元素
-         * - 內牌視覺：精確截取 #prev-inner-container 元素
-         * - 純文字輸出：提示用戶切換標籤
-         */
         async function downloadCurrentPreview() {
             const tabletId = document.getElementById('tabletId').value || '未命名';
             const entryDate = document.getElementById('entryDate').value || '無日期';
@@ -1152,7 +1151,7 @@
                 await downloadElementImage(
                     document.getElementById('outer-tablet-element'),
                     `外牌_${baseFilename}.png`,
-                    null // 外牌有自身背景，不需要額外背景色
+                    null
                 );
             } else if (currentActiveTab === 'tab-inner') {
                 const innerContainer = document.getElementById('prev-inner-container');
@@ -1163,26 +1162,19 @@
                 await downloadElementImage(
                     innerContainer,
                     `內牌_${baseFilename}.png`,
-                    '#ffffff' // 內牌容器需要白色背景
+                    '#ffffff'
                 );
             } else if (currentActiveTab === 'tab-text') {
                 alert('請先切換到「外牌視覺」或「內牌視覺」標籤，再下載圖片。');
             }
         }
 
-        /**
-         * 使用 html-to-image 庫精確截取指定 DOM 元素，並觸發下載
-         * @param {HTMLElement} element - 要截取的目標元素
-         * @param {string} filename - 下載檔案名稱
-         * @param {string|null} backgroundColor - 背景色 (如 '#ffffff')，null 表示保留透明
-         */
         async function downloadElementImage(element, filename, backgroundColor) {
             if (!element) {
                 alert('找不到要下載的預覽元素，請重新整理頁面。');
                 return;
             }
 
-            // 顯示載入提示
             const downloadBtn = document.querySelector('.btn-download-img');
             const originalText = downloadBtn ? downloadBtn.textContent : '';
             if (downloadBtn) {
@@ -1191,20 +1183,14 @@
             }
 
             try {
-                // 使用 html-to-image 的 toPng 方法
-                // pixelRatio: 2 確保高解析度輸出
-                // 精確截取元素的矩形範圍，不包含任何外部留白
                 const options = {
                     pixelRatio: 2,
-                    // 明確指定背景色處理
                     backgroundColor: backgroundColor,
-                    // 確保 CSS 屬性完整渲染
                     cacheBust: true,
                 };
 
                 const dataUrl = await htmlToImage.toPng(element, options);
 
-                // 觸發下載
                 const link = document.createElement('a');
                 link.download = filename;
                 link.href = dataUrl;
@@ -1214,10 +1200,8 @@
 
             } catch (error) {
                 console.error('下載圖片失敗:', error);
-                // 嘗試使用備用方案：html2canvas 風格的手動截圖
                 alert('下載圖片時發生錯誤，請稍後再試。\n\n若問題持續，請嘗試：\n1. 重新整理頁面\n2. 使用 Chrome 或 Edge 瀏覽器\n3. 檢查瀏覽器是否封鎖了下載視窗');
             } finally {
-                // 恢復按鈕狀態
                 if (downloadBtn) {
                     downloadBtn.textContent = originalText || '📷 下載圖片';
                     downloadBtn.disabled = false;
@@ -1301,7 +1285,6 @@
                     updateOuterVisibility();
                     renderInnerSheets();
                     updateAll();
-                    // 切換到外牌視覺
                     switchTab('tab-outer', document.getElementById('btn-tab-outer'));
                 } catch (err) {
                     console.error(err);
