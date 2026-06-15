@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位助手 - by瑋志 (第27版_下載圖片_修正版)</title>
+    <title>神主牌位助手 - by瑋志 (第28版-內頁白色)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <style>
@@ -73,7 +73,7 @@
             display: flex;
             gap: 15px;
             margin-bottom: 15px;
-        }
+            }
         .form-group {
             margin-bottom: 15px;
             flex: 1;
@@ -314,14 +314,15 @@
         .inner-tablet {
             width: 240px;
             height: 500px;
-            background: var(--inner-bg);
+            background: #ffffff; /* 已修改：紅底改白底 */
+            border: 1px solid #ddd; /* 增加淺色邊框提升白底質感 */
             border-radius: 5px;
-            color: #000;
+            color: #000000; /* 已修改：黑字 */
             padding: 25px 10px;
             display: flex;
             justify-content: center;
             gap: 10px;
-            box-shadow: 3px 6px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: 3px 6px 15px rgba(0, 0, 0, 0.15);
             box-sizing: border-box;
             position: relative;
             flex-shrink: 0;
