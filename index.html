@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位助手 - by瑋志 (第29版_內頁白色_修正版)</title>
+    <title>神主牌位助手 - by瑋志 (第31版_堂號間距修正)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <style>
@@ -269,11 +269,13 @@
         /* 堂號樣式 - 緊貼主文頂部 */
         .tanghao {
             writing-mode: horizontal-tb;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
             font-size: 1.6rem;
             font-weight: bold;
             margin-bottom: 4px;
-            letter-spacing: 5px;
             width: 100%;
             flex-shrink: 0;
         }
@@ -1052,7 +1054,7 @@
                 updateFortuneLabel('ft-outermiddle', outerMiddle, ['老']);
                 updateFortuneLabel('ft-worship', worship, ['生']);
 
-                document.getElementById('prev-tanghao').innerText = tanghaoReversed;
+                document.getElementById('prev-tanghao').innerHTML = tanghaoReversed.split('').map(ch => `<span>${ch}</span>`).join('');
                 document.getElementById('prev-year').innerHTML = formatTabletText(year);
                 document.getElementById('prev-outermiddle').innerHTML = formatTabletText(outerMiddle);
                 document.getElementById('prev-worship').innerHTML = formatTabletText(worship);
