@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位助手 - by瑋志 (第32版_堂號間距修正)</title>
+    <title>神主牌位助手 - by瑋志 (第34版_外牌高度調整)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <style>
         :root {
             --wood-bg: linear-gradient(135deg, #d2a679 0%, #b37746 100%);
             --wood-border: #6b4423;
-            --inner-bg: #ffffff; /* 已修改為白色背景 */
+            --inner-bg: #ffffff;
             --text-dark: #222;
             --text-light: #f5f5f5;
         }
@@ -281,10 +281,10 @@
             word-break: break-all;
         }
 
-        /* 外牌外框 */
+        /* 外牌外框 - 高度調整為 470px (桌面) */
         .outer-tablet {
             width: 260px;
-            height: 550px;
+            height: 470px;  /* 桌面版調整為 470px */
             background: var(--wood-bg);
             border: 8px solid var(--wood-border);
             border-radius: 20px 20px 0 0;
@@ -358,19 +358,19 @@
             align-items: flex-start;
         }
 
-        /* 內牌木片樣式 - 已修改為白底黑字與加強識別度 */
+        /* 內牌木片樣式 - 上下留白一致，高度 min-height: 300px (桌面) */
         .inner-tablet {
             width: 240px;
-            min-height: 380px;
-            background: var(--inner-bg); /* 對應白色 #ffffff */
-            border: 1px solid #ccc;      /* 新增細邊框，確保在白色背景下載時看得見木片邊界 */
+            min-height: 300px;
+            background: var(--inner-bg);
+            border: 1px solid #ccc;
             border-radius: 5px;
-            color: #000000;              /* 確保為黑色字體 */
-            padding: 25px 10px;
+            color: #000000;
+            padding: 25px 10px 25px 10px;
             display: flex;
             justify-content: center;
             gap: 10px;
-            box-shadow: 3px 6px 15px rgba(0, 0, 0, 0.15); /* 微調陰影使其在白底上更自然不突兀 */
+            box-shadow: 3px 6px 15px rgba(0, 0, 0, 0.15);
             box-sizing: border-box;
             position: relative;
             flex-shrink: 0;
@@ -499,7 +499,7 @@
             }
             .outer-tablet {
                 width: 220px;
-                height: 460px;
+                height: 400px;  /* 行動版調整為 400px */
                 padding: 25px 10px 25px 10px;
                 border-width: 6px;
             }
@@ -513,8 +513,8 @@
             }
             .inner-tablet {
                 width: 200px;
-                min-height: 320px;
-                padding: 20px 6px;
+                min-height: 260px;
+                padding: 20px 6px 20px 6px;
             }
             .inner-main {
                 font-size: 1rem;
