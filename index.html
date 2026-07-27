@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位助手 - by瑋志 (第31版_堂號間距修正)</title>
+    <title>神主牌位助手 - by瑋志 (第32版_堂號間距修正)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <style>
@@ -247,6 +247,40 @@
             display: flex;
         }
 
+        /* 預覽區上方的資訊小條：牌位編號/日期/服務人員/備註/張數小計 */
+        .preview-meta-bar {
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 24px;
+            justify-content: center;
+            background: #f7f1e6;
+            border: 1px solid #e2d2b6;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 0.8rem;
+            color: #6b4423;
+            line-height: 1.6;
+        }
+        .preview-meta-bar:empty {
+            display: none;
+        }
+        .preview-meta-bar .meta-item {
+            white-space: nowrap;
+        }
+        .preview-meta-bar .meta-label {
+            font-weight: bold;
+            color: #b37746;
+            margin-right: 2px;
+        }
+        .preview-meta-bar .meta-notes {
+            flex-basis: 100%;
+            text-align: center;
+            white-space: normal;
+            word-break: break-all;
+        }
+
         /* 外牌外框 */
         .outer-tablet {
             width: 260px;
@@ -260,7 +294,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding: 35px 15px 40px 15px;
+            padding: 35px 15px 35px 15px;
             box-sizing: border-box;
             box-shadow: 5px 10px 20px rgba(0, 0, 0, 0.3);
             flex-shrink: 0;
@@ -327,7 +361,7 @@
         /* 內牌木片樣式 - 已修改為白底黑字與加強識別度 */
         .inner-tablet {
             width: 240px;
-            height: 500px;
+            min-height: 380px;
             background: var(--inner-bg); /* 對應白色 #ffffff */
             border: 1px solid #ccc;      /* 新增細邊框，確保在白色背景下載時看得見木片邊界 */
             border-radius: 5px;
@@ -466,7 +500,7 @@
             .outer-tablet {
                 width: 220px;
                 height: 460px;
-                padding: 25px 10px 30px 10px;
+                padding: 25px 10px 25px 10px;
                 border-width: 6px;
             }
             .col-right,
@@ -479,7 +513,7 @@
             }
             .inner-tablet {
                 width: 200px;
-                height: 420px;
+                min-height: 320px;
                 padding: 20px 6px;
             }
             .inner-main {
@@ -587,8 +621,7 @@
 
         <div class="preview-panel">
             <div class="tabs">
-                <button id="btn-tab-outer" class="tab-btn active" onclick="switchTab('tab-outer', this)">外牌視覺</button>
-                <button id="btn-tab-inner" class="tab-btn" onclick="switchTab('tab-inner', this)">內牌視覺</button>
+                <button id="btn-tab-combined" class="tab-btn active" onclick="switchTab('tab-combined', this)">牌位視覺</button>
                 <button class="tab-btn" onclick="switchTab('tab-text', this)">純文字輸出</button>
             </div>
 
@@ -596,21 +629,21 @@
                 <button class="btn-download-img" onclick="downloadCurrentPreview()" title="下載當前預覽畫面為 PNG 圖片" style="margin-left: auto;">📷 下載圖片</button>
             </div>
 
-            <div id="tab-outer" class="preview-content active">
-                <div class="outer-tablet" id="outer-tablet-element">
-                    <div class="tablet-body">
-                        <div class="col-right" id="prev-worship"></div>
-                        <div class="col-middle-wrapper">
-                            <div class="tanghao" id="prev-tanghao"></div>
-                            <div class="col-middle" id="prev-outermiddle"></div>
+            <div id="tab-combined" class="preview-content active" style="flex-direction: column; align-items: stretch; gap: 16px;">
+                <div id="preview-meta-bar" class="preview-meta-bar"></div>
+                <div id="preview-visuals-row" style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; align-items: flex-start; width: 100%;">
+                    <div class="outer-tablet" id="outer-tablet-element">
+                        <div class="tablet-body">
+                            <div class="col-right" id="prev-worship"></div>
+                            <div class="col-middle-wrapper">
+                                <div class="tanghao" id="prev-tanghao"></div>
+                                <div class="col-middle" id="prev-outermiddle"></div>
+                            </div>
+                            <div class="col-left" id="prev-year"></div>
                         </div>
-                        <div class="col-left" id="prev-year"></div>
                     </div>
+                    <div id="prev-inner-container"></div>
                 </div>
-            </div>
-
-            <div id="tab-inner" class="preview-content">
-                <div id="prev-inner-container"></div>
             </div>
 
             <div id="tab-text" class="preview-content" style="flex-direction: column;">
@@ -641,7 +674,7 @@
             }]
         }];
 
-        let currentActiveTab = 'tab-outer';
+        let currentActiveTab = 'tab-combined';
 
         function init() {
             document.getElementById('outerType').addEventListener('change', handleOuterTypeChange);
@@ -663,7 +696,7 @@
             renderInnerSheets();
             updateAll();
 
-            switchTab('tab-outer', document.getElementById('btn-tab-outer'));
+            switchTab('tab-combined', document.getElementById('btn-tab-combined'));
         }
 
         function saveToLocalStorage() {
@@ -727,17 +760,14 @@
         function toggleDisplayMode() {
             const mode = document.getElementById('displayMode').value;
             const outerSection = document.getElementById('outer-settings-section');
-            const outerTabBtn = document.getElementById('btn-tab-outer');
+            const outerTabletElement = document.getElementById('outer-tablet-element');
 
             if (mode === 'innerOnly') {
                 outerSection.classList.add('mode-hidden');
-                outerTabBtn.classList.add('hidden');
-                if (currentActiveTab === 'tab-outer') {
-                    switchTab('tab-inner', document.getElementById('btn-tab-inner'));
-                }
+                if (outerTabletElement) outerTabletElement.style.display = 'none';
             } else {
                 outerSection.classList.remove('mode-hidden');
-                outerTabBtn.classList.remove('hidden');
+                if (outerTabletElement) outerTabletElement.style.display = 'flex';
             }
             updateAll();
         }
@@ -1107,7 +1137,28 @@
             });
 
             document.getElementById('text-output').value = fullText;
+            updatePreviewMetaBar(mode, tabletId, entryDate, staffName, notes);
             saveToLocalStorage();
+        }
+
+        function updatePreviewMetaBar(mode, tabletId, entryDate, staffName, notes) {
+            const bar = document.getElementById('preview-meta-bar');
+            if (!bar) return;
+
+            const outerCount = (mode === 'both') ? 1 : 0;
+            const innerCount = innerSheets.length;
+
+            const items = [];
+            if (tabletId) items.push(`<span class="meta-item"><span class="meta-label">牌位編號：</span>${tabletId}</span>`);
+            if (entryDate) items.push(`<span class="meta-item"><span class="meta-label">入牌日期：</span>${entryDate}</span>`);
+            if (staffName) items.push(`<span class="meta-item"><span class="meta-label">服務人員/申請人：</span>${staffName}</span>`);
+            items.push(`<span class="meta-item"><span class="meta-label">張數小計：</span>外牌 ${outerCount} 張・內牌 ${innerCount} 張</span>`);
+
+            let html = items.join('');
+            if (notes) {
+                html += `<span class="meta-item meta-notes"><span class="meta-label">備註：</span>${notes}</span>`;
+            }
+            bar.innerHTML = html;
         }
 
         function switchTab(tabId, btn) {
@@ -1121,8 +1172,7 @@
             currentActiveTab = tabId;
 
             const tabBtnMap = {
-                'tab-outer': 'btn-tab-outer',
-                'tab-inner': 'btn-tab-inner',
+                'tab-combined': 'btn-tab-combined',
                 'tab-text': null
             };
             const targetBtnId = tabBtnMap[tabId];
@@ -1130,7 +1180,7 @@
                 document.getElementById(targetBtnId).classList.add('active');
             }
             if (tabId === 'tab-text') {
-                const textBtn = document.querySelector('.tabs .tab-btn:nth-child(3)');
+                const textBtn = document.querySelector('.tabs .tab-btn:nth-child(2)');
                 if (textBtn) textBtn.classList.add('active');
             }
 
@@ -1158,21 +1208,11 @@
             const entryDate = document.getElementById('entryDate').value || '無日期';
             const baseFilename = `${tabletId}_${entryDate}`;
 
-            if (currentActiveTab === 'tab-outer') {
+            if (currentActiveTab === 'tab-combined') {
+                const combinedContainer = document.getElementById('tab-combined');
                 await downloadElementImage(
-                    document.getElementById('outer-tablet-element'),
-                    `外牌_${baseFilename}.png`,
-                    null
-                );
-            } else if (currentActiveTab === 'tab-inner') {
-                const innerContainer = document.getElementById('prev-inner-container');
-                if (!innerContainer || innerContainer.children.length === 0) {
-                    alert('目前沒有內牌木片可供下載。');
-                    return;
-                }
-                await downloadElementImage(
-                    innerContainer,
-                    `內牌_${baseFilename}.png`,
+                    combinedContainer,
+                    `牌位_${baseFilename}.png`,
                     '#ffffff'
                 );
             } else if (currentActiveTab === 'tab-text') {
@@ -1296,7 +1336,7 @@
                     updateOuterVisibility();
                     renderInnerSheets();
                     updateAll();
-                    switchTab('tab-outer', document.getElementById('btn-tab-outer'));
+                    switchTab('tab-combined', document.getElementById('btn-tab-combined'));
                 } catch (err) {
                     console.error(err);
                     alert("檔案格式不符，請確保上傳的是由本工具導出的 Excel 檔案。");
