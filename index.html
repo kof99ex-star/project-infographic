@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>第37版_資訊修正 - by瑋志 </title>
+    <title>神主牌位助手 - by瑋志 (第38版_新增4人選項)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <style>
@@ -937,7 +937,7 @@
         }
 
         function changeSheetType(idx, type) {
-            const count = (type === 'single-male' || type === 'single-female') ? 1 : (type === 'couple' ? 2 : 3);
+            const count = (type === 'single-male' || type === 'single-female') ? 1 : (type === 'couple' ? 2 : (type === 'quad' ? 4 : 3));
             const newPersons = [];
             for (let i = 0; i < count; i++) {
                 newPersons.push(innerSheets[idx].persons[i] || { name: "", surname: "", maidenName: "",
@@ -1073,6 +1073,7 @@
                                 <option value="single-female" ${sheet.type==='single-female'?'selected':''}>單人 - 個人牌位(女)</option>
                                 <option value="couple" ${sheet.type==='couple'?'selected':''}>夫妻</option>
                                 <option value="trio" ${sheet.type==='trio'?'selected':''}>三人</option>
+                                <option value="quad" ${sheet.type==='quad'?'selected':''}>四人</option>
                             </select>
                         </div>
                         ${pHtml}
@@ -1168,7 +1169,8 @@
                 'single-male': '單人(男)',
                 'single-female': '單人(女)',
                 'couple': '夫妻',
-                'trio': '三人'
+                'trio': '三人',
+                'quad': '四人'
             };
 
             innerSheets.forEach((sheet, sIdx) => {
@@ -1195,7 +1197,7 @@
                         `成員${pIdx+1}(${p.name})：\n${p.birth}\n${p.main}\n${p.death}\n`;
                 });
 
-                if (sheet.type === 'couple' || sheet.type === 'trio') {
+                if (sheet.type === 'couple' || sheet.type === 'trio' || sheet.type === 'quad') {
                     cols.reverse();
                 }
 
@@ -1361,10 +1363,11 @@
                             else if (typeStr.includes('男') || typeStr === 'single-male' || typeStr ===
                                 'single') type = 'single-male';
                             else if (typeStr.includes('夫妻') || typeStr === 'couple') type = 'couple';
+                            else if (typeStr.includes('四人') || typeStr === 'quad') type = 'quad';
                             else if (typeStr.includes('三人') || typeStr === 'trio') type = 'trio';
 
                             const personCount = (type === 'single-male' || type === 'single-female' ? 1 : (
-                                type === 'couple' ? 2 : 3));
+                                type === 'couple' ? 2 : (type === 'quad' ? 4 : 3)));
 
                             let persons = [];
                             for (let j = 1; j <= personCount; j++) {
@@ -1476,7 +1479,8 @@
                 'single-male': '單人(男)',
                 'single-female': '單人(女)',
                 'couple': '夫妻',
-                'trio': '三人'
+                'trio': '三人',
+                'quad': '四人'
             };
 
             data.push(["【內牌木片資料】"]);
