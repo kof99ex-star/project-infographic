@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位助手 - by瑋志 (第38版_四人調整)</title>
+    <title>神主牌位助手 - by瑋志 (第39版_新增總覽)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <style>
@@ -446,6 +446,48 @@
             line-height: 1.2;
         }
 
+        /* 總覽預覽區 CSS Grid 排版：卡片以實際牌位視覺尺寸顯示，不再縮小 */
+        /* 欄數可由使用者透過下拉選單調整（--overview-cols），預設4欄，排版寬扁，較貼近 A4 橫向列印比例 */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--overview-cols, 4), 260px);
+            gap: 24px;
+            justify-items: center;
+            align-items: start;
+            justify-content: center;
+            width: max-content;
+            max-width: none;
+            margin: 10px auto 0 auto;
+        }
+
+        /* 總覽分頁：允許內容寬度超出面板，並可橫向捲動預覽（不影響下載圖片完整度） */
+        #tab-overview.preview-content {
+            overflow-x: auto;
+            justify-content: flex-start;
+        }
+        #overview-view-wrapper {
+            width: max-content;
+            min-width: 100%;
+            margin: 0 auto;
+            flex-shrink: 0;
+        }
+
+        .overview-item-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            width: auto;
+            height: auto;
+            overflow: visible;
+            position: relative;
+        }
+
+        .overview-scale {
+            transform: none;
+            margin: 0 !important;
+            flex-shrink: 0;
+        }
+
         #text-output {
             width: 100%;
             height: 400px;
@@ -568,6 +610,10 @@
                 font-size: 0.8rem;
                 line-height: 1.15;
             }
+            .overview-grid {
+                grid-template-columns: repeat(var(--overview-cols, 4), 220px);
+                gap: 16px;
+            }
             .inner-tablet.inner-tablet-quad .inner-side {
                 font-size: 0.58rem;
                 padding-top: 14px;
@@ -675,10 +721,21 @@
             <div class="tabs">
                 <button id="btn-tab-outer" class="tab-btn active" onclick="switchTab('tab-outer', this)">外牌視覺</button>
                 <button id="btn-tab-inner" class="tab-btn" onclick="switchTab('tab-inner', this)">內牌視覺</button>
+                <button id="btn-tab-overview" class="tab-btn" onclick="switchTab('tab-overview', this)">📋 總覽</button>
                 <button class="tab-btn" onclick="switchTab('tab-text', this)">純文字輸出</button>
             </div>
 
-            <div id="btn-download-container" style="display: flex; justify-content: flex-end; margin-top: 5px; margin-bottom: -5px;">
+            <div id="btn-download-container" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 5px; margin-bottom: -5px;">
+                <div id="overview-col-control" style="display: none; align-items: center; gap: 6px;">
+                    <label for="overviewCols" style="font-weight: bold; color: #6b4423; font-size: 0.95rem;">總覽欄數：</label>
+                    <select id="overviewCols" onchange="updateOverviewColumns()">
+                        <option value="2">2 欄</option>
+                        <option value="3">3 欄</option>
+                        <option value="4" selected>4 欄</option>
+                        <option value="5">5 欄</option>
+                        <option value="6">6 欄</option>
+                    </select>
+                </div>
                 <button class="btn-download-img" onclick="downloadCurrentPreview()" title="下載當前預覽畫面為 PNG 圖片" style="margin-left: auto;">📷 下載圖片</button>
             </div>
 
@@ -702,6 +759,13 @@
                 <div class="tablet-view-wrapper" id="inner-view-wrapper">
                     <div class="info-panel" id="info-panel-inner"></div>
                     <div id="prev-inner-container"></div>
+                </div>
+            </div>
+
+            <div id="tab-overview" class="preview-content">
+                <div class="tablet-view-wrapper" id="overview-view-wrapper">
+                    <div class="info-panel" id="info-panel-overview"></div>
+                    <div class="overview-grid" id="prev-overview-container"></div>
                 </div>
             </div>
 
@@ -1161,8 +1225,95 @@
 
             const outerPanel = document.getElementById('info-panel-outer');
             const innerPanel = document.getElementById('info-panel-inner');
+            const overviewPanel = document.getElementById('info-panel-overview');
             if (outerPanel) outerPanel.innerHTML = html;
             if (innerPanel) innerPanel.innerHTML = html;
+            if (overviewPanel) overviewPanel.innerHTML = html;
+        }
+
+        function renderOverview() {
+            const overviewContainer = document.getElementById('prev-overview-container');
+            if (!overviewContainer) return;
+            overviewContainer.innerHTML = '';
+
+            const colSelect = document.getElementById('overviewCols');
+            if (colSelect) {
+                overviewContainer.style.setProperty('--overview-cols', colSelect.value);
+            }
+
+            const mode = document.getElementById('displayMode').value;
+
+            if (mode === 'both') {
+                const outerOrig = document.getElementById('outer-tablet-element');
+                if (outerOrig) {
+                    const outerClone = outerOrig.cloneNode(true);
+                    outerClone.removeAttribute('id');
+                    outerClone.classList.add('overview-scale', 'overview-outer-clone');
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'overview-item-wrapper';
+                    wrapper.appendChild(outerClone);
+                    overviewContainer.appendChild(wrapper);
+                }
+            }
+
+            const innerOrigContainer = document.getElementById('prev-inner-container');
+            if (innerOrigContainer) {
+                Array.from(innerOrigContainer.children).forEach((child, idx) => {
+                    const innerClone = child.cloneNode(true);
+                    innerClone.removeAttribute('id');
+                    innerClone.classList.add('overview-scale');
+                    if (idx === 0) innerClone.classList.add('overview-inner-reference');
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'overview-item-wrapper';
+                    wrapper.appendChild(innerClone);
+                    overviewContainer.appendChild(wrapper);
+                });
+            }
+
+            syncOverviewOuterScale();
+        }
+
+        // 讓總覽中的外牌，等比例縮放至與內牌相同高度，版面更整齊
+        function syncOverviewOuterScale() {
+            const overviewTab = document.getElementById('tab-overview');
+            if (!overviewTab || !overviewTab.classList.contains('active')) return;
+
+            const outerEl = document.querySelector('#prev-overview-container .overview-outer-clone');
+            const innerEl = document.querySelector('#prev-overview-container .overview-inner-reference');
+            if (!outerEl || !innerEl) return;
+
+            const outerWrapper = outerEl.parentElement;
+
+            // 重置，先量測未縮放前的自然尺寸
+            outerEl.style.transform = 'none';
+            outerWrapper.style.width = '';
+            outerWrapper.style.height = '';
+            outerWrapper.style.overflow = '';
+            outerWrapper.style.justifyContent = '';
+            outerWrapper.style.alignItems = '';
+
+            const outerNaturalWidth = outerEl.offsetWidth;
+            const outerNaturalHeight = outerEl.offsetHeight;
+            const innerHeight = innerEl.offsetHeight;
+
+            if (outerNaturalHeight > 0 && innerHeight > 0) {
+                const scale = innerHeight / outerNaturalHeight;
+                const scaledWidth = outerNaturalWidth * scale;
+                const scaledHeight = outerNaturalHeight * scale;
+
+                outerEl.style.transformOrigin = 'top left';
+                outerEl.style.transform = `scale(${scale})`;
+
+                // 同步縮小外層容器的版面佔位，避免格線列高仍以縮放前的高度計算
+                outerWrapper.style.width = scaledWidth + 'px';
+                outerWrapper.style.height = scaledHeight + 'px';
+                outerWrapper.style.overflow = 'hidden';
+                // 容器改為靠左上對齊，跟縮放基準點一致，避免內容置中造成兩側被裁切
+                outerWrapper.style.justifyContent = 'flex-start';
+                outerWrapper.style.alignItems = 'flex-start';
+            }
         }
 
         function updateAll() {
@@ -1245,6 +1396,8 @@
                 fullText += sheetText;
             });
 
+            renderOverview();
+
             document.getElementById('text-output').value = fullText;
             saveToLocalStorage();
         }
@@ -1262,6 +1415,7 @@
             const tabBtnMap = {
                 'tab-outer': 'btn-tab-outer',
                 'tab-inner': 'btn-tab-inner',
+                'tab-overview': 'btn-tab-overview',
                 'tab-text': null
             };
             const targetBtnId = tabBtnMap[tabId];
@@ -1269,7 +1423,7 @@
                 document.getElementById(targetBtnId).classList.add('active');
             }
             if (tabId === 'tab-text') {
-                const textBtn = document.querySelector('.tabs .tab-btn:nth-child(3)');
+                const textBtn = document.querySelector('.tabs .tab-btn:nth-child(4)');
                 if (textBtn) textBtn.classList.add('active');
             }
 
@@ -1281,6 +1435,22 @@
                     downloadContainer.style.display = 'flex';
                 }
             }
+
+            const overviewColControl = document.getElementById('overview-col-control');
+            if (overviewColControl) {
+                overviewColControl.style.display = (tabId === 'tab-overview') ? 'flex' : 'none';
+            }
+
+            if (tabId === 'tab-overview') {
+                syncOverviewOuterScale();
+            }
+        }
+
+        function updateOverviewColumns() {
+            const select = document.getElementById('overviewCols');
+            const grid = document.getElementById('prev-overview-container');
+            if (!select || !grid) return;
+            grid.style.setProperty('--overview-cols', select.value);
         }
 
         function copyText() {
@@ -1314,8 +1484,14 @@
                     `內牌_${baseFilename}.png`,
                     '#ffffff'
                 );
+            } else if (currentActiveTab === 'tab-overview') {
+                await downloadElementImage(
+                    document.getElementById('overview-view-wrapper'),
+                    `總覽_${baseFilename}.png`,
+                    '#ffffff'
+                );
             } else if (currentActiveTab === 'tab-text') {
-                alert('請先切換到「外牌視覺」或「內牌視覺」標籤，再下載圖片。');
+                alert('請切換至視覺或總覽預覽標籤，再下載圖片。');
             }
         }
 
@@ -1333,10 +1509,19 @@
             }
 
             try {
+                const fullWidth = Math.max(element.scrollWidth, element.offsetWidth);
+                const fullHeight = Math.max(element.scrollHeight, element.offsetHeight);
+
                 const options = {
                     pixelRatio: 2,
                     backgroundColor: backgroundColor,
                     cacheBust: true,
+                    width: fullWidth,
+                    height: fullHeight,
+                    style: {
+                        width: fullWidth + 'px',
+                        height: fullHeight + 'px'
+                    }
                 };
 
                 const dataUrl = await htmlToImage.toPng(element, options);
