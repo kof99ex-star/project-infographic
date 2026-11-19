@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神主牌位助手 - by瑋志 (第39版_新增總覽)</title>
+    <title>神主牌位助手 - by瑋志 (第40版_多案件)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <style>
@@ -624,6 +624,47 @@
                 font-size: 0.88rem;
             }
         }
+
+        /* ===== 案件列 ===== */
+        .case-bar {
+            max-width: 1300px;
+            margin: 0 auto 20px;
+            background: #fff;
+            border: 2px solid #b37746;
+            border-radius: 10px;
+            padding: 12px 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        .case-bar .case-label { font-weight: bold; color: #6b4423; margin-right: 4px; }
+        .case-chip {
+            padding: 8px 16px;
+            border: 2px solid #b37746;
+            background: #fff;
+            color: #6b4423;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .case-chip.active { background: #b37746; color: #fff; }
+        .case-actions { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+        .case-actions button {
+            padding: 7px 12px;
+            border: 1px solid #6b4423;
+            background: #6b4423;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .case-actions button.danger { background: #ff4444; border-color: #ff4444; }
+        .case-actions button.light { background: #fff; color: #6b4423; }
     </style>
 </head>
 <body>
@@ -632,12 +673,14 @@
         <h1>神主牌位助手</h1>
     </div>
 
+    <div class="case-bar" id="case-bar"></div>
+
     <div class="container">
         <div class="settings-panel">
             <div class="import-section">
                 <label style="color:#6b4423; display:block; margin-bottom:10px;">📂 讀取舊檔案 (僅限 .xlsx)</label>
                 <input type="file" id="uploadExcel" accept=".xlsx" style="font-size: 0.9rem;">
-                <button class="btn-clear-storage" onclick="clearLocalStorage()">🧹 清除暫存並重置</button>
+                <button class="btn-clear-storage" onclick="clearLocalStorage()">🧹 清除「目前案件」並重置</button>
             </div>
 
             <h2>管理資訊</h2>
@@ -813,7 +856,11 @@
                 el.addEventListener('change', updateAll);
             });
 
-            loadFromLocalStorage();
+            DEFAULT_FORM = collectCaseData();
+            DEFAULT_FORM = clone(DEFAULT_FORM);
+            loadStore();
+            applyCaseData(activeCase().data);
+            renderCaseBar();
             toggleDisplayMode();
             updateOuterVisibility();
             renderInnerSheets();
@@ -822,61 +869,153 @@
             switchTab('tab-outer', document.getElementById('btn-tab-outer'));
         }
 
-        function saveToLocalStorage() {
-            const data = {
-                displayMode: document.getElementById('displayMode').value,
-                tabletId: document.getElementById('tabletId').value,
-                entryDate: document.getElementById('entryDate').value,
-                staffName: document.getElementById('staffName').value,
-                tabletNotes: document.getElementById('tabletNotes').value,
-                outerType: document.getElementById('outerType').value,
-                surname: document.getElementById('surname').value,
-                maidenName: document.getElementById('maidenName').value,
-                givenName: document.getElementById('givenName').value,
-                tanghao: document.getElementById('tanghao').value,
-                outerMiddle: document.getElementById('outerMiddle').value,
-                worship: document.getElementById('worship').value,
-                year: document.getElementById('year').value,
-                innerSheets: innerSheets
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        // ===================== 多案件管理 =====================
+        const CASES_KEY = 'tablet_cases_v1';
+        const FORM_FIELDS = ['displayMode', 'tabletId', 'entryDate', 'staffName', 'tabletNotes', 'outerType',
+            'surname', 'maidenName', 'givenName', 'tanghao', 'outerMiddle', 'worship', 'year'];
+        let DEFAULT_FORM = null;
+        let casesStore = { activeId: null, cases: [] };
+
+        const clone = obj => JSON.parse(JSON.stringify(obj));
+
+        function collectCaseData() {
+            const data = {};
+            FORM_FIELDS.forEach(id => { data[id] = document.getElementById(id).value; });
+            data.innerSheets = innerSheets;
+            return data;
         }
 
-        function loadFromLocalStorage() {
-            const savedData = localStorage.getItem(STORAGE_KEY);
-            if (savedData) {
-                try {
-                    const data = JSON.parse(savedData);
-                    if (data.displayMode) document.getElementById('displayMode').value = data.displayMode;
-                    if (data.tabletId) document.getElementById('tabletId').value = data.tabletId;
-                    if (data.entryDate) document.getElementById('entryDate').value = data.entryDate;
-                    if (data.staffName) document.getElementById('staffName').value = data.staffName;
-                    if (data.tabletNotes) document.getElementById('tabletNotes').value = data.tabletNotes;
-                    if (data.outerType) document.getElementById('outerType').value = data.outerType;
-                    if (data.surname) document.getElementById('surname').value = data.surname;
-                    if (data.maidenName) document.getElementById('maidenName').value = data.maidenName;
-                    if (data.givenName) document.getElementById('givenName').value = data.givenName;
-                    if (data.tanghao) document.getElementById('tanghao').value = data.tanghao;
-                    if (data.outerMiddle) document.getElementById('outerMiddle').value = data.outerMiddle;
-                    if (data.worship) document.getElementById('worship').value = data.worship;
-                    if (data.year) document.getElementById('year').value = data.year;
+        function applyCaseData(data) {
+            const d = Object.assign({}, clone(DEFAULT_FORM), clone(data || {}));
+            FORM_FIELDS.forEach(id => {
+                if (d[id] !== undefined) document.getElementById(id).value = d[id];
+            });
+            innerSheets = (Array.isArray(d.innerSheets) && d.innerSheets.length ? d.innerSheets : clone(DEFAULT_FORM.innerSheets))
+                .map(sheet => {
+                    if (sheet.type === 'single') sheet.type = 'single-male';
+                    return sheet;
+                });
+        }
 
-                    if (data.innerSheets && Array.isArray(data.innerSheets)) {
-                        innerSheets = data.innerSheets.map(sheet => {
-                            if (sheet.type === 'single') sheet.type = 'single-male';
-                            return sheet;
-                        });
-                    }
-                } catch (error) {
-                    console.error("讀取暫存資料失敗:", error);
-                }
+        function makeCase(name, data) {
+            return { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, data };
+        }
+
+        function activeCase() {
+            return casesStore.cases.find(c => c.id === casesStore.activeId);
+        }
+
+        function persistStore() {
+            try { localStorage.setItem(CASES_KEY, JSON.stringify(casesStore)); }
+            catch (e) { console.error('儲存失敗:', e); }
+        }
+
+        function loadStore() {
+            try {
+                const raw = localStorage.getItem(CASES_KEY);
+                if (raw) casesStore = JSON.parse(raw);
+            } catch (e) { console.error('讀取案件失敗:', e); }
+
+            if (!casesStore.cases || casesStore.cases.length === 0) {
+                // 第一次使用新版：把舊版單一暫存搬進「案件 1」
+                let old = null;
+                try { old = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) {}
+                const first = makeCase('案件 1', old || clone(DEFAULT_FORM));
+                casesStore = { activeId: first.id, cases: [first] };
             }
+            if (!activeCase()) casesStore.activeId = casesStore.cases[0].id;
         }
 
+        // 每次畫面更新都會呼叫：把目前表單存回「目前案件」
+        function saveToLocalStorage() {
+            const c = activeCase();
+            if (!c) return;
+            c.data = collectCaseData();
+            persistStore();
+        }
+
+        function refreshAfterCaseChange() {
+            toggleDisplayMode();
+            updateOuterVisibility();
+            renderInnerSheets();
+            updateAll();
+            renderCaseBar();
+        }
+
+        function renderCaseBar() {
+            const chips = casesStore.cases.map(c =>
+                `<button class="case-chip ${c.id === casesStore.activeId ? 'active' : ''}" onclick="switchCase('${c.id}')">${escapeHtml(c.name)}</button>`
+            ).join('');
+            document.getElementById('case-bar').innerHTML = `
+                <span class="case-label">📁 案件：</span>
+                ${chips}
+                <div class="case-actions">
+                    <button onclick="addCase()">＋ 新增</button>
+                    <button class="light" onclick="duplicateCase()">複製</button>
+                    <button class="light" onclick="renameCase()">改名</button>
+                    <button class="danger" onclick="deleteCase()">刪除</button>
+                </div>`;
+        }
+
+        function switchCase(id) {
+            if (id === casesStore.activeId) return;
+            saveToLocalStorage();
+            casesStore.activeId = id;
+            applyCaseData(activeCase().data);
+            refreshAfterCaseChange();
+        }
+
+        function addCase() {
+            const name = prompt('請輸入新案件名稱（例如：王家）', `案件 ${casesStore.cases.length + 1}`);
+            if (name === null) return;
+            saveToLocalStorage();
+            const c = makeCase(name.trim() || `案件 ${casesStore.cases.length + 1}`, clone(DEFAULT_FORM));
+            casesStore.cases.push(c);
+            casesStore.activeId = c.id;
+            applyCaseData(c.data);
+            refreshAfterCaseChange();
+        }
+
+        function duplicateCase() {
+            saveToLocalStorage();
+            const cur = activeCase();
+            const name = prompt('複製後的案件名稱', cur.name + ' (複製)');
+            if (name === null) return;
+            const c = makeCase(name.trim() || cur.name + ' (複製)', clone(cur.data));
+            casesStore.cases.push(c);
+            casesStore.activeId = c.id;
+            applyCaseData(c.data);
+            refreshAfterCaseChange();
+        }
+
+        function renameCase() {
+            const cur = activeCase();
+            const name = prompt('請輸入案件名稱', cur.name);
+            if (name === null || !name.trim()) return;
+            cur.name = name.trim();
+            persistStore();
+            renderCaseBar();
+        }
+
+        function deleteCase() {
+            if (casesStore.cases.length <= 1) {
+                alert('至少要保留一個案件。若要清空內容，請使用「清除目前案件並重置」。');
+                return;
+            }
+            const cur = activeCase();
+            if (!confirm(`確定要刪除案件「${cur.name}」嗎？(將無法復原)`)) return;
+            const idx = casesStore.cases.indexOf(cur);
+            casesStore.cases.splice(idx, 1);
+            casesStore.activeId = casesStore.cases[Math.max(0, idx - 1)].id;
+            applyCaseData(activeCase().data);
+            refreshAfterCaseChange();
+        }
+
+        // 只重置「目前案件」，不影響其他案件
         function clearLocalStorage() {
-            if (confirm("確定要清除目前所有的編輯內容並恢復預設嗎？(將無法復原)")) {
-                localStorage.removeItem(STORAGE_KEY);
-                location.reload();
+            if (confirm(`確定要清空案件「${activeCase().name}」的內容並恢復預設嗎？(其他案件不受影響，且無法復原)`)) {
+                applyCaseData(clone(DEFAULT_FORM));
+                refreshAfterCaseChange();
             }
         }
 
